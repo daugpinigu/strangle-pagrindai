@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="description" content="Short strangle pagrindai: mechanika, IBKR atidarymas ir uždarymas, valdymo taisyklės, rizika ir automatizuoto eksperimento rezultatai.">
+<meta property="og:title" content="Strangle pagrindai">
+<meta property="og:description" content="daug_pinigu edukacija: short strangle nuo A iki Z ir eksperimento skaičiai.">
+<title>Strangle pagrindai</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#127919;</text></svg>">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #faf6ea;
+    --card: #fffdf6;
+    --surface: #f2ecda;
+    --surface2: #e9e1c9;
+    --ink: #2b3560;
+    --ink-strong: #1e2542;
+    --muted: #6b6350;
+    --hair: rgba(43, 53, 96, .18);
+    --gold: #c98a1b;
+    --gold-text: #8f6410;
+    --green: #3e7d4e;
+    --green-soft: rgba(62, 125, 78, .12);
+    --rust: #b5502f;
+    --rust-soft: rgba(181, 80, 47, .10);
+    --shadow: 0 1px 2px rgba(30, 37, 66, .06), 0 8px 28px rgba(30, 37, 66, .07);
+    --c-strat: #a8730f;
+    --c-spy: #3a5bb5;
+    --c-qqq: #b5502f;
+    --grid: rgba(43, 53, 96, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141828;
+      --card: #1a1f33;
+      --surface: #1e2440;
+      --surface2: #262d4c;
+      --ink: #e9e2cd;
+      --ink-strong: #f7f1e0;
+      --muted: #a89f83;
+      --hair: rgba(233, 226, 205, .16);
+      --gold: #d9a53f;
+      --gold-text: #d9a53f;
+      --green: #7cb98b;
+      --green-soft: rgba(124, 185, 139, .13);
+      --rust: #d97f5a;
+      --rust-soft: rgba(217, 127, 90, .12);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 28px rgba(0, 0, 0, .3);
+      --c-strat: #c0902f;
+      --c-spy: #6f8fdc;
+      --c-qqq: #cf7a58;
+      --grid: rgba(233, 226, 205, .12);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141828;
+    --card: #1a1f33;
+    --surface: #1e2440;
+    --surface2: #262d4c;
+    --ink: #e9e2cd;
+    --ink-strong: #f7f1e0;
+    --muted: #a89f83;
+    --hair: rgba(233, 226, 205, .16);
+    --gold: #d9a53f;
+    --gold-text: #d9a53f;
+    --green: #7cb98b;
+    --green-soft: rgba(124, 185, 139, .13);
+    --rust: #d97f5a;
+    --rust-soft: rgba(217, 127, 90, .12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 28px rgba(0, 0, 0, .3);
+    --c-strat: #c0902f;
+    --c-spy: #6f8fdc;
+    --c-qqq: #cf7a58;
+    --grid: rgba(233, 226, 205, .12);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 22px; }
+
+  nav.toc {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--hair);
+  }
+  nav.toc .row {
+    max-width: 900px; margin: 0 auto; padding: 10px 22px;
+    display: flex; gap: 4px 14px; overflow-x: auto; white-space: nowrap;
+    scrollbar-width: none;
+  }
+  nav.toc .row::-webkit-scrollbar { display: none; }
+  nav.toc a {
+    color: var(--muted); text-decoration: none; font-size: 12.5px;
+    font-weight: 600; letter-spacing: .02em; padding: 4px 2px;
+    border-bottom: 2px solid transparent;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible { color: var(--ink-strong); }
+  nav.toc a.on { color: var(--gold-text); border-bottom-color: var(--gold); }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--gold-text); margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(38px, 7vw, 58px); font-weight: 800; letter-spacing: -.025em;
+    line-height: 1.04; color: var(--ink-strong); margin: 0 0 18px; text-wrap: balance;
+  }
+  h2 {
+    font-size: clamp(24px, 4vw, 31px); font-weight: 800; letter-spacing: -.018em;
+    color: var(--ink-strong); margin: 0 0 6px; text-wrap: balance; line-height: 1.15;
+  }
+  h3 { font-size: 18px; font-weight: 700; color: var(--ink-strong); margin: 26px 0 8px; }
+  h4 { margin: 0; }
+  p { margin: 0 0 14px; }
+  section { padding: 54px 0 10px; }
+  section > .wrap > p { max-width: 46em; }
+  .chapter {
+    display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--hair); padding-bottom: 14px;
+  }
+  .chapter .no {
+    font-size: 13px; font-weight: 800; color: var(--gold-text);
+    letter-spacing: .08em; font-variant-numeric: tabular-nums;
+  }
+  strong { color: var(--ink-strong); }
+  .num { font-variant-numeric: tabular-nums; }
+  a { color: var(--gold-text); }
+
+  header.hero { padding: 64px 0 34px; }
+  header.hero .lede { font-size: 19px; max-width: 42em; color: var(--ink); }
+  .hero-stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 8px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 12px;
+    padding: 12px 18px; box-shadow: var(--shadow); min-width: 150px;
+  }
+  .stat .v { font-size: 21px; font-weight: 800; color: var(--ink-strong); font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+
+  blockquote.rq {
+    margin: 20px 0; padding: 16px 20px 13px;
+    background: var(--card); border-left: 3px solid var(--gold);
+    border-radius: 0 12px 12px 0; box-shadow: var(--shadow);
+    font-size: 15.5px;
+  }
+  blockquote.rq p { margin: 0 0 6px; }
+  blockquote.rq cite {
+    font-style: normal; font-size: 12px; color: var(--muted); font-weight: 600;
+    letter-spacing: .03em;
+  }
+  .note {
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 12px;
+    padding: 14px 18px; margin: 18px 0; font-size: 15px;
+  }
+  .note.warn { background: var(--rust-soft); border-color: color-mix(in srgb, var(--rust) 35%, transparent); }
+  .note.good { background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 35%, transparent); }
+  .note .t { font-weight: 800; color: var(--ink-strong); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+  .note p:last-child { margin-bottom: 0; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 22px 0; }
+  .cardi {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 14px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .cardi h4 { margin: 0 0 6px; font-size: 15.5px; color: var(--ink-strong); }
+  .cardi p { font-size: 14.5px; margin: 0; color: var(--ink); }
+  .cardi .k {
+    display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gold-text); margin-bottom: 8px;
+  }
+
+  table.tbl {
+    width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 14px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .tblwrap { overflow-x: auto; background: var(--card); border: 1px solid var(--hair); border-radius: 14px; box-shadow: var(--shadow); padding: 6px 14px; margin: 18px 0; }
+  table.tbl th { text-align: left; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 12px 6px; border-bottom: 1px solid var(--hair); }
+  table.tbl td { padding: 9px 12px; border-bottom: 1px solid var(--hair); }
+  table.tbl tr:last-child td { border-bottom: none; }
+  table.tbl td.r, table.tbl th.r { text-align: right; }
+  table.tbl td.pos { color: var(--green); font-weight: 700; }
+  table.tbl td.neg { color: var(--rust); font-weight: 700; }
+
+  figure { margin: 24px 0; }
+  figure svg { max-width: 100%; height: auto; display: block; }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; max-width: 46em; }
+  .figcard { background: var(--card); border: 1px solid var(--hair); border-radius: 16px; box-shadow: var(--shadow); padding: 20px; overflow-x: auto; position: relative; }
+
+  .plusmin { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 22px 0; }
+  .plusmin .col { background: var(--card); border: 1px solid var(--hair); border-radius: 16px; box-shadow: var(--shadow); padding: 20px 22px; }
+  .plusmin .col.plus { border-top: 3px solid var(--green); }
+  .plusmin .col.minus { border-top: 3px solid var(--rust); }
+  .plusmin h3 { margin: 0 0 12px; font-size: 16px; }
+  .plusmin .col.plus h3 { color: var(--green); }
+  .plusmin .col.minus h3 { color: var(--rust); }
+  .plusmin ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+  .plusmin li { font-size: 14.5px; padding-left: 16px; position: relative; }
+  .plusmin li::before { content: ""; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; }
+  .plusmin .plus li::before { background: var(--green); }
+  .plusmin .minus li::before { background: var(--rust); }
+  .plusmin li b { color: var(--ink-strong); }
+
+  .rules { counter-reset: rule; display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; margin: 22px 0; }
+  .rule-c {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 14px;
+    padding: 16px 18px; box-shadow: var(--shadow); position: relative;
+  }
+  .rule-c::before {
+    counter-increment: rule; content: counter(rule, decimal-leading-zero);
+    font-size: 12px; font-weight: 800; color: var(--gold-text); letter-spacing: .08em;
+    display: block; margin-bottom: 6px; font-variant-numeric: tabular-nums;
+  }
+  .rule-c h4 { margin: 0 0 5px; font-size: 15px; color: var(--ink-strong); }
+  .rule-c p { font-size: 14px; margin: 0; }
+
+  /* steps */
+  .steps { display: grid; gap: 12px; margin: 20px 0; counter-reset: step; }
+  .step {
+    display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: start;
+    background: var(--card); border: 1px solid var(--hair); border-radius: 14px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: #fff;
+    display: grid; place-items: center; font-weight: 800; font-size: 14px; margin-top: 2px;
+  }
+  .step h4 { font-size: 15.5px; color: var(--ink-strong); margin: 0 0 4px; }
+  .step p { font-size: 14.5px; margin: 0 0 6px; }
+  .step p:last-child { margin: 0; }
+  .step .ui { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 1px 8px; border-radius: 6px; background: var(--surface2); color: var(--ink-strong); white-space: nowrap; }
+  .sell { color: var(--rust); font-weight: 800; }
+  .buy { color: var(--c-spy); font-weight: 800; }
+
+  /* checklist */
+  .chk { display: grid; gap: 10px; margin: 20px 0; }
+  .chk label {
+    display: flex; gap: 12px; align-items: flex-start; background: var(--card);
+    border: 1px solid var(--hair); border-radius: 12px; padding: 13px 16px;
+    box-shadow: var(--shadow); cursor: pointer; font-size: 15px;
+  }
+  .chk input { margin: 3px 0 0; width: 17px; height: 17px; accent-color: var(--green); flex-shrink: 0; }
+  .chk label span small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  /* glossary */
+  .gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin: 20px 0; }
+  .gterm { background: var(--card); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .gterm dt { font-weight: 800; color: var(--ink-strong); font-size: 15px; margin-bottom: 3px; }
+  .gterm dd { margin: 0; font-size: 14px; }
+  .gterm dd em { font-style: normal; color: var(--muted); font-size: 13px; display: block; margin-top: 4px; }
+
+  /* calculator */
+  .calc {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 16px;
+    box-shadow: var(--shadow); padding: 22px; margin: 22px 0;
+  }
+  .calc .ins { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .calc label { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 5px; }
+  .calc input {
+    font: inherit; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px;
+    color: var(--ink-strong); background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 10px; padding: 9px 12px; width: 100%;
+  }
+  .calc input:focus-visible { outline: 2px solid var(--gold); }
+  .ogrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .obox { background: var(--surface); border-radius: 12px; padding: 13px 15px; display: flex; flex-direction: column; gap: 2px; }
+  .obox .ol { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .obox .ov { font-size: 23px; font-weight: 800; color: var(--ink-strong); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .obox .ov.green { color: var(--green); }
+  .obox .ov.rust { color: var(--rust); }
+  .obox .oh { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .oline { margin: 16px 0 0; font-size: 14.5px; }
+  .green { color: var(--green); font-weight: 700; }
+  .rust { color: var(--rust); font-weight: 700; }
+
+  /* KPI tiles */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
+  .kpi { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .kpi .l { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .kpi .v { font-size: 26px; font-weight: 800; color: var(--ink-strong); font-variant-numeric: tabular-nums; line-height: 1.15; margin: 4px 0 2px; }
+  .kpi .v.green { color: var(--green); }
+  .kpi .v.rust { color: var(--rust); }
+  .kpi .s { font-size: 12.5px; color: var(--muted); }
+
+  /* chart */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 10px; }
+  .legend span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 7px; vertical-align: middle; background: var(--sw); }
+  .tipbox {
+    position: absolute; pointer-events: none; background: var(--ink-strong); color: var(--bg);
+    font-size: 12.5px; font-weight: 600; padding: 7px 10px; border-radius: 8px;
+    transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity .12s;
+    font-variant-numeric: tabular-nums; z-index: 5; line-height: 1.4;
+  }
+  .tipbox b { display: block; font-weight: 800; margin-bottom: 2px; }
+
+  details.faq {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 12px;
+    margin: 10px 0; box-shadow: var(--shadow); overflow: hidden;
+  }
+  details.faq summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 700; font-size: 15.5px;
+    color: var(--ink-strong); list-style: none; display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+  }
+  details.faq summary::-webkit-details-marker { display: none; }
+  details.faq summary::after { content: "+"; color: var(--gold-text); font-weight: 800; flex-shrink: 0; }
+  details.faq[open] summary::after { content: "-"; }
+  details.faq summary:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+  details.faq .a { padding: 0 18px 15px; font-size: 15px; max-width: 46em; }
+  details.faq .a p { margin: 0 0 10px; }
+  details.ledger summary { cursor: pointer; font-weight: 700; color: var(--gold-text); font-size: 14.5px; margin: 8px 0; }
+
+  footer {
+    margin-top: 70px; border-top: 1px solid var(--hair); padding: 30px 0 60px;
+    font-size: 13.5px; color: var(--muted);
+  }
+  footer p { max-width: 52em; }
+  .pill {
+    display: inline-block; font-size: 11.5px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 999px;
+    background: var(--surface2); color: var(--ink); margin-right: 6px;
+  }
+  .small { font-size: 13.5px; color: var(--muted); max-width: 46em; }
+</style>
+
+<nav class="toc" aria-label="Turinys">
+  <div class="row">
+    <a href="#pradzia">00 Pradžia</a>
+    <a href="#kas-tai">01 Kas tai</a>
+    <a href="#zodynas">02 Žodynėlis</a>
+    <a href="#kada">03 Kada tinka</a>
+    <a href="#kojos">04 Kojos</a>
+    <a href="#atidarymas">05 IBKR: atidarymas</a>
+    <a href="#uzdarymas">06 IBKR: uždarymas</a>
+    <a href="#valdymas">07 Valdymas</a>
+    <a href="#rizika">08 Rizika ir dydis</a>
+    <a href="#eksperimentas">09 Eksperimentas</a>
+    <a href="#klaidos">10 Klaidos</a>
+    <a href="#duk">DUK</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">daug_pinigu · edukacija · 🎯 short strangle</p>
+    <h1>Strangle pagrindai</h1>
+    <p class="lede">
+      Kas yra short strangle, kaip jį atidaryti ir uždaryti IBKR be siurprizų, kokiomis mechaninėmis taisyklėmis jį valdyti
+      ir ką rodo mano pilnai automatizuotas strangle eksperimentas po trijų su viršum mėnesių. Trečias edukacinis puslapis po
+      <a href="https://daugpinigu.github.io/csp-cc-pagrindai/">CSP ir CC pagrindų</a> ir <a href="https://daugpinigu.github.io/margin-pagrindai/">opcionų su margin</a>.
+    </p>
+    <div class="hero-stats">
+      <div class="stat"><div class="v">2 kojos</div><div class="l">PUT ŽEMIAU + CALL AUKŠČIAU</div></div>
+      <div class="stat"><div class="v">~16 delta</div><div class="l">KIEKVIENA KOJA</div></div>
+      <div class="stat"><div class="v">45 DTE</div><div class="l">ATIDARYMAS, IŠĖJIMAS 21 DTE</div></div>
+      <div class="stat"><div class="v">50% / 2x</div><div class="l">PELNO FIKSAVIMAS / STOP</div></div>
+    </div>
+    <div class="note">
+      <div class="t">Kaip skaityti</div>
+      <p>
+        01-04 - kas tai ir iš ko renkama. 05-06 - IBKR mygtukai žingsnis po žingsnio, įskaitant tą painųjį „Order Buy". 07-08 - taisyklės ir rizika.
+        09-10 - eksperimento skaičiai ir klaidos, už kurias jau sumokėta. DUK - klausimai iš grupės.
+      </p>
+    </div>
+  </div>
+</header>
+
+<section id="pradzia">
+  <div class="wrap">
+    <div class="chapter"><span class="no">00</span><h2>Kodėl atsirado šis puslapis</h2></div>
+    <p>
+      Vienas grupės narys po pirmų dviejų strangle bandymų parašė: dvi pozicijos, abi gavosi skirtingai, o IBKR vietoje pardavimo rodo
+      „Order Buy" ir kojos, kurios watchlist'e buvo sell, staiga tampa buy put ir buy call. Tai ne jo klaida. Tai IBKR kombinacijų logika,
+      apie kurią niekas nepasako iš anksto, ir ji kiekvienam pirmą kartą atrodo kaip „mindfuck'as".
+    </p>
+    <p>
+      Antra priežastis - gyvame susitikime pasakojau apie strangle eksperimentą, kurį esu paleidęs ir pilnai automatizavęs: robotas atsirenka
+      aktyvus pagal tam tikrus kriterijus, o mano judgment'o ten nėra. Praėjo kiek daugiau nei trys mėnesiai, tad metas parodyti, kaip jam sekasi,
+      su visais skaičiais, o ne tik su gražiu grafiku.
+    </p>
+    <div class="note warn">
+      <div class="t">Kam šis puslapis ne</div>
+      <p>
+        Short strangle turi dvi nepadengtas kojas, o nepadengtam call'ui reikia <strong>margin sąskaitos</strong> ir aukštesnio IBKR opcionų leidimo.
+        Jei dirbi su cash sąskaita, tavo variantas yra „covered strangle": 100 akcijų + covered call + cash secured put - tos pačios dvi premijos,
+        tik su akcijų rizika vietoje neribotos. Apie tai - <a href="https://daugpinigu.github.io/csp-cc-pagrindai/">CSP ir CC puslapyje</a>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="kas-tai">
+  <div class="wrap">
+    <div class="chapter"><span class="no">01</span><h2>Kas yra short strangle</h2></div>
+    <p>
+      Parduodi <strong>du opcionus</strong> tai pačiai akcijai ir tai pačiai expiracijos datai: put'ą žemiau dabartinės kainos ir call'ą virš jos.
+      Už abu gauni premium iš karto. Tavo statymas: iki expiracijos kaina liks tarp dviejų strike'ų, abu opcionai expiruos beverčiai, o abi premijos liks tau.
+    </p>
+    <p>
+      Tai ne „CSP su bonusu". CSP tavo blogiausias atvejis yra akcijos už strike kainą. Strangle blogiausias atvejis yra <strong>neribotas nuostolis į viršų</strong>
+      (call pusė) ir nuostolis iki nulio į apačią (put pusė). Būtent todėl visas šis puslapis sukasi apie taisykles, o ne apie tai, kaip surinkti daugiau premium.
+    </p>
+
+    <figure>
+      <div class="figcard" id="payoffCard"></div>
+      <figcaption>
+        Realios pozicijos pavyzdys iš eksperimento: AAPL prie 313$, parduotas 285 put ir 345 call, gautas credit 4,84$ (484$ už vieną strangle).
+        Pelno zona - tarp breakeven'ų 280,16$ ir 349,84$, t. y. maždaug ±11% nuo kainos. Už zonos ribų nuostolis auga tiesiškai ir be lubų į viršų.
+      </figcaption>
+    </figure>
+
+    <h3>Kas dirba už tave ir kas prieš</h3>
+    <div class="cards">
+      <div class="cardi"><span class="k">Už tave</span><h4>Laikas (theta)</h4><p>Kiekviena diena, kai kaina lieka koridoriuje, abu opcionai pinga. Dvi kojos - dvigubas theta srautas iš tos pačios akcijos.</p></div>
+      <div class="cardi"><span class="k">Už tave</span><h4>IV kritimas (vega)</h4><p>Pardavei brangią IV - ji nurimo - opcionai atpigo, nors kaina nė nepajudėjo. Todėl strangle atidaromas, kai IV rank aukštas, ne kai žemas.</p></div>
+      <div class="cardi"><span class="k">Prieš tave</span><h4>Staigus judesys (gamma)</h4><p>Gap'as per naktį pramuša strike'ą, o stop loss tokiu atveju įvykdomas jau kitoje kainoje. Tai pagrindinė strangle rizika ir vienintelė, kurios taisyklės nepašalina.</p></div>
+    </div>
+
+    <h3>Strangle ir straddle</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th></th><th>Short strangle</th><th>Short straddle</th></tr></thead>
+        <tbody>
+          <tr><td><b>Strike'ai</b></td><td>Put žemiau, call aukščiau kainos (OTM)</td><td>Abu prie pat kainos (ATM), tas pats strike</td></tr>
+          <tr><td><b>Premium</b></td><td>Mažesnis</td><td>Didesnis</td></tr>
+          <tr><td><b>Pelno zona</b></td><td>Plati (pvz. ±10-12%)</td><td>Siaura, pelnas tik jei kaina beveik nejuda</td></tr>
+          <tr><td><b>Kam</b></td><td>Pradžiai ir mechaninei sistemai</td><td>Patyrusiems, aktyviai valdantiems</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="zodynas">
+  <div class="wrap">
+    <div class="chapter"><span class="no">02</span><h2>Žodynėlis</h2></div>
+    <p>Tik tie terminai, be kurių likusi dalis nesiskaitys. Bendrą opcionų žodyną (delta, theta, IV, margin) rasi <a href="https://daugpinigu.github.io/margin-pagrindai/#zodynas">margin puslapio žodynėlyje</a>.</p>
+    <dl class="gloss">
+      <div class="gterm"><dt>Credit</dt><dd>Suma, kurią gauni pardavęs abi kojas. Rašoma už vieną akciją: credit 4,84$ = 484$ už vieną strangle. <em>Visos valdymo taisyklės skaičiuojamos nuo jo.</em></dd></div>
+      <div class="gterm"><dt>16 delta</dt><dd>Strike, kurio delta apie 0,16. Grubiai: ~84% tikimybė, kad ta koja expiruos beverčiai. <em>Strike renkamas pagal deltą, ne pagal „gražią" kainą.</em></dd></div>
+      <div class="gterm"><dt>DTE</dt><dd>Days to expiration - dienų iki expiracijos. Atidarom ties ~45, išeinam ties 21. <em>Tai tastytrade baseline, ne mano išradimas.</em></dd></div>
+      <div class="gterm"><dt>IVR (IV rank)</dt><dd>Kur dabartinė IV yra metų diapazone: 0 = metų dugnas, 100 = metų viršūnė. <em>Filtro riba: ≥30 pusė dydžio, ≥50 pilnas. Plačiau - <a href="https://daugpinigu.github.io/iv-rank-percentile/">IV rank puslapyje</a>.</em></dd></div>
+      <div class="gterm"><dt>Mark / dabartinė kaina</dt><dd>Kiek šiandien kainuotų atpirkti abi kojas. Lyginama su credit'u: mark 50% credit'o = laikas fiksuoti pelną. <em>IBKR tai Mkt Val stulpelis.</em></dd></div>
+      <div class="gterm"><dt>BP (buying power)</dt><dd>Kiek sąskaitos pajėgumo užrakina pozicija. Naked strangle skaičiuojamas pagal Reg-T formulę, ne strike × 100. <em>IBKR ekrane - Maintenance Margin „Change" preview lange.</em></dd></div>
+      <div class="gterm"><dt>Kombinacija (combo)</dt><dd>IBKR abi kojas gali laikyti vienu instrumentu su viena kaina. Patogu, bet turi savo Buy/Sell logiką. <em>Skyrius 05 - būtent apie tai.</em></dd></div>
+      <div class="gterm"><dt>Tested / untested pusė</dt><dd>Tested - koja, prie kurios kaina artėja. Untested - ta, kuri jau beveik bevertė. <em>Mechaninėje sistemoje su jomis nieko nedarom iki taisyklės.</em></dd></div>
+      <div class="gterm"><dt>Breakeven</dt><dd>Put strike minus credit ir call strike plius credit. Tarp jų - pelnas expiracijos dieną. <em>Bet pozicija uždaroma anksčiau, todėl realiai svarbesnis mark, ne breakeven.</em></dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="kada">
+  <div class="wrap">
+    <div class="chapter"><span class="no">03</span><h2>Kada strangle tinka ir kada ne</h2></div>
+    <blockquote class="rq">
+      <p>Ar tai strategija, kuri visuomet veiks ir yra geriausia? Nemanau. Didžiausia jos rizika yra staigūs judesiai į viršų ir į apačią. Tai kol rinka yra pusiau miegančioje fazėje su nedideliais svyravimais, tol strangle yra geriausia strategija, nes kolekcionuoji premium iš abiejų pusių, o dar ir darai tai labai efektyviai.</p>
+      <cite>daug_pinigu · 2026-09-20</cite>
+    </blockquote>
+    <p>
+      „Pusiau mieganti rinka" nėra prognozė, tai filtras. Strangle nereikia atspėti krypties, jam reikia, kad rinka <strong>judėtų mažiau, nei įkainota opcionuose</strong>.
+      Kai IV aukšta, o realizuotas judesys mažas, skirtumas ir yra tavo pelnas. Kai IV žema arba akcija prieš binarinį įvykį, to skirtumo nėra.
+    </p>
+    <div class="plusmin">
+      <div class="col plus">
+        <h3>Atidarom, kai</h3>
+        <ul>
+          <li><b>IVR ≥ 50</b> - pilnas dydis. 30-50 - pusė dydžio. Žemiau 30 - ne.</li>
+          <li><b>Iki earnings daugiau nei 7 dienos.</b> Vėliau cikle atsiskaitymas gali būti, bet tiesiai prieš jį strangle neatidarom.</li>
+          <li><b>Likvidumas:</b> bid-ask spread iki 40% nuo mid ir open interest bent 50 kiekvienoje kojoje.</li>
+          <li><b>Credit bent 12% nuo užrakinamo BP.</b> Kitaip pozicija valgo kapitalą, o premijos beveik neduoda.</li>
+          <li><b>Akcija, kurios istorinis blogiausias dienos gap'as nesugriauna sąskaitos</b> - žr. 08 skyrių.</li>
+        </ul>
+      </div>
+      <div class="col minus">
+        <h3>Neatidarom, kai</h3>
+        <ul>
+          <li><b>Meme ar naujienų akcija</b> - 30% gap'as per naktį ten yra normali diena.</li>
+          <li><b>Žema absoliuti IV</b> (KO, JNJ, PFE tipo vardai) net su aukštu IVR - eksperimentas parodė, kad jie duoda 8-10% credit nuo BP ir tik užima vietą.</li>
+          <li><b>Vienpusė momentum rinka</b> - call pusė bus testuojama nuolat.</li>
+          <li><b>Kai nesi pasiruošęs uždaryti su nuostoliu</b> - strangle be stop taisyklės yra ne strategija, o loterija.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kojos">
+  <div class="wrap">
+    <div class="chapter"><span class="no">04</span><h2>Iš ko renkamos kojos</h2></div>
+    <p>
+      Receptas mechaninis, kad nebūtų ką „pajausti". Būtent pagal šias taisykles dirba ir mano eksperimento robotas - be jokių išimčių.
+    </p>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Parametras</th><th>Taisyklė</th><th>Kodėl</th></tr></thead>
+        <tbody>
+          <tr><td><b>Expiracija</b></td><td>Artimiausias mėnesinis ciklas prie 45 DTE (28-70 langas)</td><td>Theta jau reikšminga, gamma dar rami. Mėnesiniai kontraktai likvidesni už weekly.</td></tr>
+          <tr><td><b>Put strike</b></td><td>Delta apie -0,16</td><td>~84% tikimybė expiruoti beverčiai. Toliau nuo kainos - per mažai premium, arčiau - per dažnai testuojama.</td></tr>
+          <tr><td><b>Call strike</b></td><td>Delta apie 0,16</td><td>Simetriška tikimybė, bet call pusė paprastai arčiau kainos doleriais - taip įkainota rinka.</td></tr>
+          <tr><td><b>Likvidumas</b></td><td>Spread ≤ 40% nuo mid, OI ≥ 50 abiem kojom</td><td>Su plačiu spread'u ir atidarymas, ir uždarymas kainuoja premijos dalį. 16 delta sparnuose spread 15-35% yra norma net likvidžiausiems vardams.</td></tr>
+          <tr><td><b>Efektyvumas</b></td><td>Credit ≥ 12% nuo Reg-T BP</td><td>Geros pozicijos eksperimente duoda 14-35%. Žemiau 12% - kapitalas dirba už nieką.</td></tr>
+          <tr><td><b>Dydis</b></td><td>Kontraktai = 1 500$ / (credit × 100), pusė dydžio 750$</td><td>Rizika prie stop loss'o ≈ 1x credit, tad tai ~1,5% nuo 100k sąskaitos vienai pozicijai. Lubos: 10k$ BP ir 10 kontraktų.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Pavyzdys: pirmoji eksperimento pozicija</h3>
+    <p>
+      2026-06-12, AMD prie 513$, IVR 98. Parduotas 410 put ir 690 call, expiracija 07-24 (42 DTE), credit 22,60$ - tai 2 260$ už vieną strangle prie 7 390$ BP (30,6% credit/BP).
+      Uždaryta 06-29 pasiėmus 50% pelno: +1 207$ per 17 dienų. Kaina tuo metu buvo 539$, t. y. viduryje koridoriaus, kaip ir turi būti.
+    </p>
+  </div>
+</section>
+
+<section id="atidarymas">
+  <div class="wrap">
+    <div class="chapter"><span class="no">05</span><h2>IBKR: kaip atidaryti strangle žingsnis po žingsnio</h2></div>
+    <p>
+      Aprašau IBKR programėlę telefone, nes ja naudojasi dauguma grupės. TWS ir Client Portal logika ta pati, skiriasi tik mygtukų vietos.
+      Svarbiausia taisyklė, kurią verta įsiminti prieš viską: opcionų lentelėje <span class="sell">Bid = parduodi</span>, <span class="buy">Ask = perki</span>.
+    </p>
+
+    <div class="steps">
+      <div class="step"><div><h4>Atsidaryk akcijos opcionų lentelę</h4><p>Watchlist → akcija → skiltis <span class="ui">Options</span>. Pasirink expiraciją: mėnesinį ciklą, kuris arčiausiai 45 dienų.</p></div></div>
+      <div class="step"><div><h4>Įjunk Strategy Builder</h4><p>Apvalus mygtukas apačioje dešinėje. Įjungus, kiekvienas paspaudimas lentelėje prideda koją, o ne atidaro atskirą orderį.</p></div></div>
+      <div class="step"><div><h4>Pridėk put koją: spausk ant PUT <span class="sell">Bid</span></h4><p>Prie strike'o, kurio delta apie -0,16 (žemiau kainos). Koja atsiranda apačioje kaip <span class="sell">Sell</span>, raudona.</p></div></div>
+      <div class="step"><div><h4>Pridėk call koją: spausk ant CALL <span class="sell">Bid</span></h4><p>Prie strike'o su delta apie 0,16 (virš kainos). Antra koja - irgi <span class="sell">Sell</span>, irgi raudona. Dabar apačioje matai kombinaciją iš dviejų kojų ir jos bendrą kainą.</p></div></div>
+      <div class="step"><div><h4>Order → kiekis 1 → limit kaina</h4><p>Limit kaina yra credit už visą kombinaciją, už vieną akciją (4,84 = 484$). Pradėk nuo mid arba 0,05 žemiau mid, jei nori greitesnio užpildymo. Dydį didink tik pagal 04 skyriaus formulę, ne „nes leidžia".</p></div></div>
+      <div class="step"><div><h4>Preview, ne Submit</h4><p>Čia ir tikrinamas viskas, kas gali būti apversta: kojos, pinigų kryptis, margin. Sąrašas žemiau. Tik tada Submit.</p></div></div>
+    </div>
+
+    <h3>Kodėl IBKR rodo „BUY", kai tu parduodi</h3>
+    <p>
+      IBKR kombinaciją laiko <strong>vienu instrumentu</strong>, kuris turi savo kryptį ir savo kainą. Kojos viduje turi savo kryptis. Todėl dvi parduotos kojos gali būti
+      pateiktos kaip „BUY 1 kombinacija" su kojomis „-1 put, -1 call" ir neigiama kaina. Tai ta pati pozicija, tik užrašyta kitaip.
+    </p>
+    <div class="note">
+      <div class="t">IBKR kainos ženklo taisyklė</div>
+      <p>
+        Jei kombinacijos kryptis <b>BUY</b> ir tu <em>gauni</em> pinigų - limit kaina rašoma <b>neigiama</b>. Jei kryptis <b>SELL</b> ir gauni pinigų - kaina <b>teigiama</b>.
+        Abiem atvejais tai credit. Kai matai „Order Buy" su minuso kaina prie dviejų sell kojų - viskas gerai, tu parduodi strangle.
+      </p>
+    </div>
+    <p>
+      Antras spąstas - <strong>kombinacija, išsaugota watchlist'e</strong>. Ji turi savo apibrėžimą (kuri koja perkama, kuri parduodama), o mygtukas Sell apverčia visą apibrėžimą.
+      Jei watchlist'e strangle buvo išsaugotas kaip „buy put + buy call", tai Sell mygtukas jį parduoda, t. y. daro tai, ko nori, nors kojų sąraše rašo „buy". Jei jis buvo išsaugotas
+      kaip „sell put + sell call", tas pats Sell mygtukas abi kojas <em>nuperka</em>. Tas pats žodis, priešingas rezultatas. Todėl pirmus mėnesius watchlist'o kombinacijų
+      nenaudok apskritai: kiekvieną kartą surink kojas iš naujo per Strategy Builder, spausdamas ant Bid.
+    </p>
+
+    <h3>Trys dalykai Preview lange, kurie nemeluoja</h3>
+    <div class="chk" id="chkOpen">
+      <label><input type="checkbox" data-k="legs"><span>Kiekviena koja atskirai rodo <span class="sell">SELL</span> (Sell to Open, raudona)<small>Ne kombinacijos antraštė, o kojų sąrašas. Jei bent viena koja rodo Buy - atšauk ir surink iš naujo.</small></span></label>
+      <label><input type="checkbox" data-k="cash"><span>Pinigai ateina pas tave: credit<small>BUY + neigiama kaina arba SELL + teigiama kaina. Jei ženklas kitoks - tu perki strangle, ne parduodi.</small></span></label>
+      <label><input type="checkbox" data-k="margin"><span>Maintenance Margin stulpelis „Change" padidėja<small>Parduotas strangle užrakina BP. Pirktas strangle beveik nieko neužrakina - tai greičiausias būdas pastebėti apverstą orderį. Kaip skaityti šią lentelę - <a href="https://daugpinigu.github.io/margin-pagrindai/#patikra">margin puslapio 05 skyrius</a>.</small></span></label>
+      <label><input type="checkbox" data-k="qty"><span>Kiekis toks, kokį davė formulė, expiracija ta, kurią rinkaisi<small>Strategy Builder kartais palieka ankstesnę expiraciją, jei ją keitei tarp kojų.</small></span></label>
+    </div>
+
+    <h3>Paprastesnis kelias: du atskiri orderiai</h3>
+    <p>
+      Jei kombinacijos vis dar painioja - parduok put'ą kaip įprastą CSP orderį, tada parduok call'ą kaip atskirą orderį. Tai vadinama „legging in".
+      Komisiniai tokie patys (skaičiuojami už kontraktą), margin po abiejų užpildymo suskaičiuojamas kaip strangle. Minusai du: gauni dvi skirtingas kainas ir kelias sekundes
+      turi tik vieną koją. Naujokui tai geresnis trade-off'as nei apverstas strangle.
+    </p>
+    <p class="small">
+      TWS kompiuteryje: Order Entry → Strategy Builder → Strategy meniu → Strangle. Pasirinkus call strike, TWS pats prideda žemesnio strike put'ą, abi kojos rodomos raudonai (sell).
+      Slinkdamas pelės ratuką keiti put strike'ą. Toliau tas pats Preview su tais pačiais trimis patikrinimais.
+    </p>
+  </div>
+</section>
+
+<section id="uzdarymas">
+  <div class="wrap">
+    <div class="chapter"><span class="no">06</span><h2>IBKR: kaip uždaryti</h2></div>
+    <p>
+      Uždarymas yra <strong>atpirkimas</strong>: perki atgal tai, ką pardavei. Todėl uždarymo orderis visada bus Buy, ir tai vienintelis atvejis, kai žodis „Buy" ekrane yra teisingas be išlygų.
+      Tam reikia laisvo BP - dar viena priežastis neužpildyti sąskaitos iki 100%.
+    </p>
+    <div class="steps">
+      <div class="step"><div><h4>Portfolio → pozicija</h4><p>IBKR kojas rodo atskirai (put ir call kaip dvi eilutes). Spaudi ant vienos - langelyje rinkiesi <span class="ui">Close Position</span>.</p></div></div>
+      <div class="step"><div><h4>Buy orderis su limit kaina</h4><p>Limit kaina už vieną akciją. Nori greičiau - rašai arčiau Ask. Kartoji su antra koja. Arba: Strategy Builder → tos pačios dvi kojos per <span class="buy">Ask</span> → viena kombinacija Buy su teigiama kaina (debit).</p></div></div>
+      <div class="step"><div><h4>Patikrink, ką atidavei</h4><p>Pardavei už 4,84$, atpirkai už 2,42$ - liko 2,42$ × 100 = 242$. Tai ir yra 50% pelno fiksavimas. Atpirkai už 9,68$ - nuostolis 484$, tai stop loss ties 2x credit.</p></div></div>
+    </div>
+
+    <h3>Kada uždaroma tik viena koja</h3>
+    <p>
+      Kai kaina nuėjo nuo vienos kojos taip toli, kad ji kainuoja 0,05-0,10$, ta koja nebeduoda premium, tik riziką. Ją galima atpirkti už centus, ir lieka paprastas naked put arba call.
+      Tastytrade mokykla čia dar ir „rolina" untested pusę arčiau kainos, kad surinktų daugiau credit'o. Mano eksperimente to <strong>nedarom</strong>: taisyklės žiūri tik į visos pozicijos mark'ą.
+      Pradžiai rekomenduoju taip pat - kuo mažiau sprendimų, tuo mažiau klaidų.
+    </p>
+    <div class="note warn">
+      <div class="t">Nelaikyk iki expiracijos</div>
+      <p>
+        Paskutinės trys savaitės yra gamma zona: nedidelis kainos judesys keičia pozicijos vertę labai greitai, o expiracijos dieną atsiranda assignment rizika abiem kryptim.
+        21 DTE taisyklė (07 skyrius) egzistuoja tam, kad ten niekada neatsidurtum.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="valdymas">
+  <div class="wrap">
+    <div class="chapter"><span class="no">07</span><h2>Valdymas: trys taisyklės be išimčių</h2></div>
+    <p>
+      Strangle su „pažiūrėsim" valdymu virsta strangle su vienu dideliu nuostoliu. Todėl trys skaičiai, kurie sprendžia už tave dar prieš atidarant:
+    </p>
+    <div class="rules">
+      <div class="rule-c"><h4>Pelnas: 50% credit'o</h4><p>Mark nukrito iki pusės gauto credit'o - uždarai. Pirmą pusę pelno surenki greitai, antra pusė reikalauja dvigubai laiko ir visos rizikos. Eksperimente 36 iš 49 pozicijų uždarytos būtent taip, vidutiniškai per 17 dienų.</p></div>
+      <div class="rule-c"><h4>Laikas: 21 DTE</h4><p>Liko 21 diena - uždarai, nesvarbu, koks rezultatas. Toliau gamma auga greičiau nei theta. Eksperimente tai buvo 5 pozicijos, vidutiniškai +130$: nei pelnas, nei nuostolis, tiesiog nebeverta laikyti.</p></div>
+      <div class="rule-c"><h4>Stop: 2x credit'o</h4><p>Mark pasiekė dvigubą credit'ą - uždarai su ~1x credit nuostoliu. 8 pozicijos iš 49, vidutiniškai -1 314$. Gap'as gali peršokti šį lygį (CRM: 3,8x), bet be jo nuostoliai būtų dar didesni.</p></div>
+    </div>
+
+    <h3>Pasiskaičiuok savo strangle</h3>
+    <p>Įvesk lentelės skaičius. Skaičiuoklė rodo, kur pelno fiksavimas, kur stop, kiek BP užrakina ir ar pozicija apskritai verta pagal eksperimento filtrus.</p>
+    <div class="calc" id="strCalc">
+      <div class="ins">
+        <div><label for="cSpot">Akcijos kaina, $</label><input id="cSpot" type="number" value="313" min="0" step="0.5" inputmode="decimal"></div>
+        <div><label for="cPutK">Put strike, $</label><input id="cPutK" type="number" value="285" min="0" step="1" inputmode="decimal"></div>
+        <div><label for="cPutP">Put premija, $</label><input id="cPutP" type="number" value="2.46" min="0" step="0.01" inputmode="decimal"></div>
+        <div><label for="cCallK">Call strike, $</label><input id="cCallK" type="number" value="345" min="0" step="1" inputmode="decimal"></div>
+        <div><label for="cCallP">Call premija, $</label><input id="cCallP" type="number" value="2.38" min="0" step="0.01" inputmode="decimal"></div>
+        <div><label for="cN">Kontraktų</label><input id="cN" type="number" value="1" min="1" step="1" inputmode="numeric"></div>
+        <div><label for="cAcct">Sąskaita, $</label><input id="cAcct" type="number" value="100000" min="0" step="1000" inputmode="numeric"></div>
+      </div>
+      <div id="calcOut"></div>
+    </div>
+    <p class="small">
+      BP skaičiuojamas pagal Reg-T naked formulę: didesnės kojos reikalavimas + kitos kojos premija, kur kojos reikalavimas = max(20% × kaina - OTM suma, 10% × kaina) × 100 + premija.
+      IBKR skaičius skirsis (jų rizikos modelis), bet eilė ta pati. Komisiniai (IBKR apie 1,05$ už kontraktą) neįtraukti.
+    </p>
+  </div>
+</section>
+
+<section id="rizika">
+  <div class="wrap">
+    <div class="chapter"><span class="no">08</span><h2>Rizika ir pozicijos dydis</h2></div>
+    <p>
+      Strangle matematika paprasta ir nemaloni: <strong>vidutinis nuostolis eksperimente yra 2,5 karto didesnis už vidutinį pelną</strong> (-1 199$ prieš +489$).
+      Su tokiu santykiu vien tam, kad išeitum į nulį, reikia laimėti apie 71% pozicijų. Eksperimentas laimi 81,6%. Visas pelnas gyvena tuose dešimtyje procentinių punktų,
+      ir vienas blogas mėnuo gali juos suvalgyti.
+    </p>
+
+    <h3>Kaip atrodo gap'as realybėje</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Pozicija</th><th>Kas įvyko</th><th class="r">Rezultatas</th></tr></thead>
+        <tbody>
+          <tr><td><b>CRM</b> 170P/230C, 3 kontraktai<br><small>atidaryta 08-14 prie 196,50$</small></td><td>Earnings vakare, kitą rytą akcija +24% iki 243$. Stop lygis 2x peršoktas iki 3,8x - stop nesustabdo gap'o, jis tik riboja tai, kas po jo.</td><td class="r neg">-4 050$</td></tr>
+          <tr><td><b>META</b> 505P/705C<br><small>atidaryta 07-02 prie 585$</small></td><td>Aukštas IVR (91) buvo dėl priežasties: akcija per 8 dienas užlipo iki 667$, call koja pramušta.</td><td class="r neg">-2 308$</td></tr>
+          <tr><td><b>WMT</b> 105P/130C<br><small>atidaryta 08-19 prie 114$</small></td><td>Robotas atidarė likus 12 valandų iki earnings, nes tuomet dar netikrino datų. Gap -8,7%, put prie ITM. Nuo tos dienos - 7 dienų earnings blackout.</td><td class="r neg">-239$</td></tr>
+          <tr><td><b>TSLA</b> 340P/480C<br><small>atidaryta 07-15 prie 395$</small></td><td>Be jokio įvykio: 8 dienos, -16% ir put koja ties stop'u. Tokia akcija ir turi būti pusės dydžio.</td><td class="r neg">-1 318$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote class="rq">
+      <p>Strangle nėra mano žaidimas - CALL pusė nuolat kelia daugiau streso.</p>
+      <cite>daug_pinigu · 🧪margin-account · 2026 pavasaris, po MU strangle -10 600$ tikroje sąskaitoje</cite>
+    </blockquote>
+    <p>
+      Tai rašiau apie savo rankinę margin sąskaitą, ir tai vis dar tiesa: rankinis strangle be griežtų taisyklių man kainavo penkiaženklę sumą. Eksperimentas yra atsakymas į klausimą,
+      ar problema buvo strangle, ar tai, kad jį valdžiau pagal nuotaiką. Kol kas atrodo, kad antra.
+    </p>
+
+    <h3>Dydžio taisyklės, kurios laiko sąskaitą gyvą</h3>
+    <div class="rules">
+      <div class="rule-c"><h4>~1,5% rizikos pozicijai</h4><p>Kontraktų kiekis skaičiuojamas nuo nuostolio prie stop'o, ne nuo to, kiek „leidžia" BP. Pigiam vardui tai gali būti 6 kontraktai, brangiam - 1.</p></div>
+      <div class="rule-c"><h4>BP iki 50% sąskaitos</h4><p>Antra pusė lieka gap'ams, margin plėtimuisi ir uždarymams. Eksperimento sąskaitoje BP cap perskaičiuojamas nuo dabartinės vertės kasdien.</p></div>
+      <div class="rule-c"><h4>Iki 15 pozicijų, iki 3 naujų per dieną</h4><p>Diversifikacija per vardus ir per atidarymo dienas. Visos pozicijos viename cikle su ta pačia expiracija - koncentracija, kurią eksperimentas vis dar turi.</p></div>
+      <div class="rule-c"><h4>Stress testas prieš atidarant</h4><p>Kiekvienai kandidatei paskaičiuojama, ką jai padarytų blogiausias tos akcijos dienos gap'as per 3 metus. Jei suma per visą knygą baisi - knyga per didelė.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="eksperimentas">
+  <div class="wrap">
+    <div class="chapter"><span class="no">09</span><h2>Eksperimentas: trys mėnesiai skaičiais</h2></div>
+    <blockquote class="rq">
+      <p>Kas buvo gyvame susitikime, jau pasakojau apie strangle eksperimentą, kurį esu paleidęs ir pilnai automatizavęs: robotas atsirenka aktyvus pagal tam tikrus kriterijus, mano judgment'o ten nėra. Štai kaip jam sekasi, praėjus jau šiek tiek virš 3 mėnesių. Įspūdingai atrodo ne tik tai, kad lenkiam ir S&P 500, ir QQQ, bet ir kaip stabiliai tai vyksta. Atskirtis nuo gyvo susitikimo tik dar labiau padidėjo.</p>
+      <cite>daug_pinigu · 2026-09-20</cite>
+    </blockquote>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">Strategija</div><div class="v green">+10,65%</div><div class="s">100 000$ → 110 652$</div></div>
+      <div class="kpi"><div class="l">S&P 500 (SPY)</div><div class="v">+3,39%</div><div class="s">tas pats periodas, price return</div></div>
+      <div class="kpi"><div class="l">Nasdaq 100 (QQQ)</div><div class="v">+0,70%</div><div class="s">tas pats periodas, price return</div></div>
+      <div class="kpi"><div class="l">Max drawdown</div><div class="v">-2,31%</div><div class="s">SPY -3,48%, QQQ -10,58%</div></div>
+      <div class="kpi"><div class="l">Uždarytų pozicijų</div><div class="v">49</div><div class="s">81,6% pelningų</div></div>
+      <div class="kpi"><div class="l">Vid. pelnas / nuostolis</div><div class="v">+489$ / -1 199$</div><div class="s">vidutinis laikymas 17 d.</div></div>
+    </div>
+
+    <figure>
+      <div class="figcard">
+        <div class="legend"><span style="--sw:var(--c-strat)">Strangle strategija</span><span style="--sw:var(--c-spy)">S&P 500 (SPY)</span><span style="--sw:var(--c-qqq)">Nasdaq 100 (QQQ)</span></div>
+        <div id="eqChart"></div>
+        <div class="tipbox" id="eqTip"></div>
+      </div>
+      <figcaption>
+        Sąskaitos vertė nuo 2026-06-12 iki 2026-09-18, visi trys nuo 100 000$. SPY/QQQ - price return be dividendų (baseline SPY 737,76$, QQQ 717,12$).
+        Užvedus ant grafiko - reikšmės tą dieną. Gyva versija, atsinaujinanti kas 15 min rinkos valandomis: <a href="https://daugpinigu.github.io/tt-strangle-dashboard/">strangle dashboard</a>.
+      </figcaption>
+    </figure>
+
+    <p>
+      Stabilumas grafike nėra atsitiktinis: 49 pozicijos ant ~30 skirtingų vardų, kiekviena po 1-3% sąskaitos, uždaromos vidutiniškai per 17 dienų. Vienos pozicijos rezultatas
+      sąskaitos linijos beveik nepajudina, todėl linija auga theta greičiu, o ne akcijų greičiu. Blogiausia diena per visą periodą buvo -2,31% (08-27, CRM gap'as).
+    </p>
+
+    <h3>Kaip robotas dirba</h3>
+    <div class="cards">
+      <div class="cardi"><span class="k">Universe</span><h4>~46 likvidūs vardai</h4><p>Tech, finansai, energija, sveikata, vartojimas, industrials. Ne indeksai - būtent pavienės akcijos, nes klausimas buvo, ar diversifikacija atlaiko pavienių akcijų gap'us.</p></div>
+      <div class="cardi"><span class="k">Kasdien</span><h4>Skenas ir entry</h4><p>Du kartus per dieną: IVR filtras, 16 delta strike'ai iš CBOE lentelių, likvidumas, credit/BP, earnings kalendorius, dydis pagal riziką. Iki 3 naujų pozicijų per dieną.</p></div>
+      <div class="cardi"><span class="k">Kas 15 min</span><h4>Valdymas</h4><p>Rinkos valandomis pozicijos permarkinamos ir taikomos trys taisyklės: 50% pelnas, 21 DTE, 2x stop. Po kiekvieno run'o - nepriklausomas auditas, ar nieko neapversta.</p></div>
+      <div class="cardi"><span class="k">Sąžiningumas</span><h4>Slippage ir be komisinių</h4><p>Užpildymai skaičiuojami nuo mid, uždarant nuimama po 0,05$ kiekvienai kojai. Komisiniai nemodeliuoti - realybėje tai apie 4$ vienam strangle ciklui, arba ~200$ per visą periodą.</p></div>
+    </div>
+
+    <h3>Kaip baigėsi pozicijos</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Uždarymo priežastis</th><th class="r">Pozicijų</th><th class="r">Suma</th><th class="r">Vidurkis</th></tr></thead>
+        <tbody>
+          <tr><td>50% pelno fiksavimas</td><td class="r">36</td><td class="r pos">+18 629$</td><td class="r">+517$</td></tr>
+          <tr><td>21 DTE išėjimas</td><td class="r">5</td><td class="r pos">+650$</td><td class="r">+130$</td></tr>
+          <tr><td>Stop loss 2x credit</td><td class="r">8</td><td class="r neg">-10 514$</td><td class="r">-1 314$</td></tr>
+          <tr><td><b>Iš viso</b></td><td class="r"><b>49</b></td><td class="r pos">+8 765$</td><td class="r">+179$</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">
+      Dvi pozicijos (KO, MRVL) buvo anuliuotos tą pačią dieną dėl entry klaidų (žr. 10 skyrių), kartu -151$. Jos į statistiką neįtrauktos, bet į sąskaitos vertę - taip.
+      Surinkta credit'o iš viso 45 662$, realizuota 19,2% nuo jo. Atviros pozicijos 09-18: 15, BP 52 719$ (95% nuo 50% cap), nerealizuotas +2 038$.
+    </p>
+
+    <details class="ledger">
+      <summary>Visos 49 uždarytos pozicijos</summary>
+      <div class="tblwrap" id="ledgerWrap"></div>
+    </details>
+
+    <div class="note">
+      <div class="t">Ko šis rezultatas neįrodo</div>
+      <p>
+        Trys mėnesiai be rinkos masto įvykio neįrodo, kad strangle knyga išgyvens rinkos masto įvykį. Geras rezultatas be tail įvykio yra „dar neįvykusi avarija", o ne jos nebuvimas.
+        Tai paper sąskaita su 15 min vėluojančiais CBOE duomenimis. Ir kriterijai, ką reiškia „veikia", apsibrėžti iš anksto: ROC virš S&P 500, drawdown iki 15%, stress testas išgyvenamas.
+        Vertinam po 6 mėnesių, galutinai po 12. Tai duomenys diskusijai, ne leidimas kam nors eiti live.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="klaidos">
+  <div class="wrap">
+    <div class="chapter"><span class="no">10</span><h2>Klaidos, už kurias eksperimentas jau sumokėjo</h2></div>
+    <p>Visos šitos klaidos buvo padarytos su virtualiais pinigais ir kiekviena pakeitė taisyklę. Tau jos gali kainuoti tikrus.</p>
+    <div class="rules">
+      <div class="rule-c"><h4>Strangle prieš earnings</h4><p>WMT atidarytas likus 12 valandų iki atsiskaitymo, MRVL - tą pačią dieną, kai vienas duomenų šaltinis tylėjo. Dabar tikrinami du šaltiniai ir blokuojama 7 dienos iki earnings. Rankinis variantas: prieš kiekvieną atidarymą pažiūrėti datą pačiam.</p></div>
+      <div class="rule-c"><h4>Dydis „pagal 1 kontraktą"</h4><p>Pirmą mėnesį visos pozicijos buvo po 1 kontraktą. Pigiems vardams tai 0,2% rizikos, brangiems 1,5% - knyga buvo nesubalansuota ir pusė kapitalo gulėjo. Dydis skaičiuojamas nuo rizikos prie stop'o.</p></div>
+      <div class="rule-c"><h4>Žemos IV vardai valgo BP</h4><p>KO 8 kontraktai užrakino 9 064$ už 752$ credit'o. Aukštas IVR ant žemos absoliučios IV yra „brangu santykinai, pigu absoliučiai". Nuo tada credit turi būti bent 12% nuo BP.</p></div>
+      <div class="rule-c"><h4>Kaina 0 nereiškia „bevertis"</h4><p>Pirmą intraday rytą vėluojantys duomenys rodė bid 0 / ask 0, robotas tai perskaitė kaip 50% pelną ir uždarė dvi pozicijas. Pirmas pusvalandis po atidarymo - ne laikas sprendimams pagal ekraną.</p></div>
+      <div class="rule-c"><h4>Viskas vienoje expiracijoje</h4><p>Robotas visada ima artimiausią 45 DTE ciklą, todėl 100% BP gyvena tame pačiame mėnesyje ir visi 21 DTE išėjimai įvyksta vienu metu. Tai problema, kurios dar neišsprendžiau. Rankiniu būdu - skirstyk į du ciklus.</p></div>
+      <div class="rule-c"><h4>Stop nėra garantija</h4><p>CRM per naktį peršoko 2x lygį iki 3,8x. Stop taisyklė riboja nuostolį normalioje rinkoje, bet gap'ą riboja tik pozicijos dydis. Todėl 1,5% taisyklė svarbesnė už stop taisyklę.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="duk">
+  <div class="wrap">
+    <div class="chapter"><span class="no">DUK</span><h2>Klausimai, kuriuos uždavėte</h2></div>
+
+    <h3>IBKR ir orderiai</h3>
+    <details class="faq"><summary>Sudėjau dvi sell kojas, o IBKR rodo „Order Buy". Ką padariau ne taip?</summary>
+      <div class="a"><p>Nieko. IBKR kombinaciją traktuoja kaip vieną instrumentą su savo kryptimi, o kojos viduje turi savo. Dvi parduotos kojos gali būti rodomos kaip Buy kombinacija su neigiama kaina - neigiama kaina čia ir reiškia, kad pinigus gauni tu. Tikrink Preview lange kojų sąrašą (abi Sell), kainos ženklą ir Maintenance Margin „Change" - jei margin auga, tu parduodi.</p></div></details>
+
+    <details class="faq"><summary>Įsimečiau strangle į watchlist'ą, spaudžiau Sell, o kojos tapo buy put ir buy call. Ką dabar turiu?</summary>
+      <div class="a"><p>Priklauso nuo to, kaip kombinacija buvo apibrėžta watchlist'e. Sell mygtukas apverčia visą apibrėžimą: jei ji buvo išsaugota kaip „buy put + buy call", tu ją pardavei ir turi short strangle, nors kojų sąraše rašo buy. Vienintelis patikimas atsakymas - Portfolio langas: prie kiekvienos kojos matai kiekį su minusu (parduota) arba be jo (pirkta), o Cost Basis rodo gautą (short) arba sumokėtą (long) premium. Jei paaiškėjo, kad nusipirkai - uždaryk ir surink iš naujo per Strategy Builder.</p></div></details>
+
+    <details class="faq"><summary>Ar galiu tiesiog parduoti put'ą ir call'ą atskirai?</summary>
+      <div class="a"><p>Taip, ir pradžiai tai geriausias variantas. Rezultatas sąskaitoje tas pats: du parduoti opcionai, margin skaičiuojamas kaip strangle. Kombinacija duoda vieną kainą ir vieną užpildymą, bet už tai moki painiava su Buy/Sell. Kai pirmi 10 strangle praeis be siurprizų, pereik prie Strategy Builder.</p></div></details>
+
+    <details class="faq"><summary>Ar strangle galima su cash sąskaita?</summary>
+      <div class="a"><p>Ne - nepadengtam call'ui reikia margin sąskaitos ir atitinkamo leidimo. Cash sąskaitoje artimiausias giminaitis yra covered strangle: turi 100 akcijų, parduodi CC virš kainos ir CSP žemiau, pinigus put'ui laikai cash. Dvi premijos, bet blogiausias atvejis - 200 akcijų, ne neribotas nuostolis.</p></div></details>
+
+    <details class="faq"><summary>Kiek BP užrakina vienas strangle?</summary>
+      <div class="a"><p>Reg-T logika: didesnės kojos reikalavimas plius kitos kojos premija, kur kojos reikalavimas yra maždaug 20% akcijos kainos minus atstumas iki strike'o. AAPL prie 313$ su 285/345 strike'ais tai apie 3 900$ už vieną strangle, t. y. apie 7 kartus mažiau nei CSP tam pačiam put'ui. Būtent todėl strangle taip efektyviai naudoja kapitalą ir būtent todėl juo taip lengva persidozuoti. Tikslų skaičių visada rodo Preview.</p></div></details>
+
+    <details class="faq"><summary>Kiek kainuoja komisiniai?</summary>
+      <div class="a"><p>IBKR ima už kontraktą, mano sandoriuose išeidavo apie 1,05$. Strangle - du kontraktai atidarant ir du uždarant, tai apie 4,2$ už pilną ciklą. Prie 484$ credit'o tai nereikšminga, prie 60$ credit'o - jau 7%. Dar viena priežastis nepardavinėti pigių strangle.</p></div></details>
+
+    <h3>Taisyklės</h3>
+    <details class="faq"><summary>Kodėl 16 delta, o ne 30? Juk 30 duoda dvigubai daugiau premium.</summary>
+      <div class="a"><p>Ir dvigubai dažniau testuojama. 16 delta strangle turi apie 70% tikimybę, kad abi kojos expiruos beverčiai, 30 delta - apie 40%. Su 2x stop taisykle dažnas testavimas reiškia dažnus nuostolius po 1x credit, ir didesnis credit to nekompensuoja. 16 delta yra taškas, kur tikimybė, premium ir stop dažnis susitinka.</p></div></details>
+
+    <details class="faq"><summary>Kodėl 45 DTE, o ne weekly, kaip su CSP?</summary>
+      <div class="a"><p>CSP blogiausias atvejis yra akcijos, tad trumpi terminai ir dažnas kartojimas ten tinka. Strangle blogiausias atvejis yra gap'as, o trumpų opcionų gamma daro gap'ą brangiausią. 45 DTE duoda pakankamai theta, kad 50% pelno atsirastų per 2-3 savaites, ir pakankamai laiko, kad vienos dienos judesys nebūtų mirtinas. 21 DTE išėjimas nukerta tą dalį, kur weekly opcionai ir gyvena.</p></div></details>
+
+    <details class="faq"><summary>Kaina artėja prie vienos kojos. Rolinti, uždaryti, laukti?</summary>
+      <div class="a"><p>Mechaninėje sistemoje - laukti iki taisyklės: arba mark grįžta ir pasiimi 50%, arba pasiekia 2x ir uždarai. Tastytrade mokykla dar rolina untested pusę arčiau, kad sumažintų nuostolį. Tai veikia, bet reikalauja sprendimų tuo momentu, kai emocijos didžiausios. Pirmus metus - tik taisyklės.</p></div></details>
+
+    <details class="faq"><summary>Ar laikyti strangle per earnings?</summary>
+      <div class="a"><p>Atidaryti tiesiai prieš earnings - ne (7 dienų blackout). Jei atsiskaitymas yra vėliau cikle, eksperimentas pozicijas laiko, bet žymi atskirai: iš 8 tokių pozicijų suma -208$, kai likusios 41 davė +8 973$. Skaičiai dar maži, bet kryptis aiški: earnings strangle mechaninei sistemai nepadeda.</p></div></details>
+
+    <details class="faq"><summary>Kodėl ne SPY ar QQQ strangle, kaip daro tastytrade?</summary>
+      <div class="a"><p>Galima ir taip, indeksų strangle yra klasika: nėra pavienės akcijos gap'ų, likvidumas geriausias. Eksperimentas sąmoningai testuoja pavienius vardus, nes klausimas buvo, ar diversifikacija per 30 akcijų atlaiko jų gap riziką. Jei pradedi pats - indeksas yra saugesnis pirmas žingsnis.</p></div></details>
+
+    <h3>Eksperimentas</h3>
+    <details class="faq"><summary>Ar tai reiškia, kad man reikia daryti strangle su tikrais pinigais?</summary>
+      <div class="a"><p>Ne. Tai reiškia, kad mechaninis strangle trijų mėnesių ramioje rinkoje uždirbo daugiau nei indeksai su mažesniu svyravimu. Rinkos masto įvykio per tą laiką nebuvo. Pats sprendimą priimsiu po 6 ir po 12 mėnesių pagal iš anksto apsibrėžtus kriterijus, ir tai bus sprendimas apie mano pinigus, ne apie tavo.</p></div></details>
+
+    <details class="faq"><summary>Ar galiu pakartoti eksperimentą pats?</summary>
+      <div class="a"><p>Taisyklės visos šiame puslapyje: 04 (kojos), 07 (valdymas), 08 (dydis). Paper account IBKR turi tą patį opcionų funkcionalumą. Rankiniu būdu užtenka vieno skeno per dieną po rinkos atidarymo ir vieno patikrinimo vakare. Svarbiausia dalis nėra skenas, o tai, kad taisyklių laikaisi tada, kai norisi jų nesilaikyti.</p></div></details>
+
+    <details class="faq"><summary>Kur matyti dabartinę knygą?</summary>
+      <div class="a"><p><a href="https://daugpinigu.github.io/tt-strangle-dashboard/">Strangle dashboard</a> - atviros pozicijos, uždarytos, grafikas ir praleisti kandidatai su priežastimis. Atsinaujina kas 15 minučių rinkos valandomis.</p></div></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><span class="pill">daug_pinigu</span> <span class="pill">2026-09-20</span> <span class="pill">duomenys iki 2026-09-18</span></p>
+    <p>
+      Kiti edukaciniai puslapiai: <a href="https://daugpinigu.github.io/csp-cc-pagrindai/">CSP ir CC pagrindai</a> ·
+      <a href="https://daugpinigu.github.io/margin-pagrindai/">Opcionai su margin</a> ·
+      <a href="https://daugpinigu.github.io/iv-rank-percentile/">IV rank ir IV percentile</a> ·
+      <a href="https://daugpinigu.github.io/tt-strangle-dashboard/">Strangle dashboard (gyvas)</a>
+    </p>
+    <p>
+      Tai edukacinė medžiaga, ne investavimo rekomendacija. Eksperimentas vyksta virtualioje sąskaitoje. Visi sprendimai su tavo pinigais yra tavo.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var EQ = [{"d":"2026-06-12","s":100000,"spy":100000,"qqq":100000},{"d":"2026-06-17","s":100692,"spy":100675,"qqq":101177},{"d":"2026-06-19","s":100756,"spy":101217,"qqq":103167},{"d":"2026-06-22","s":100676,"spy":100878,"qqq":102550},{"d":"2026-06-24","s":101078,"spy":99816,"qqq":100304},{"d":"2026-06-25","s":101319,"spy":99520,"qqq":100053},{"d":"2026-06-26","s":101297,"spy":99230,"qqq":98561},{"d":"2026-06-29","s":101780,"spy":100424,"qqq":100890},{"d":"2026-06-30","s":101844,"spy":101149,"qqq":102585},{"d":"2026-07-01","s":101844,"spy":100976,"qqq":101051},{"d":"2026-07-02","s":101729,"spy":100922,"qqq":99432},{"d":"2026-07-03","s":101738,"spy":100952,"qqq":99596},{"d":"2026-07-06","s":101609,"spy":101888,"qqq":100824},{"d":"2026-07-07","s":101997,"spy":101322,"qqq":99000},{"d":"2026-07-08","s":102431,"spy":100919,"qqq":99014},{"d":"2026-07-09","s":101742,"spy":101872,"qqq":100888},{"d":"2026-07-10","s":100873,"spy":102342,"qqq":101203},{"d":"2026-07-13","s":100747,"spy":101406,"qqq":99071},{"d":"2026-07-14","s":100743,"spy":101963,"qqq":100425},{"d":"2026-07-15","s":100499,"spy":102260,"qqq":100072},{"d":"2026-07-16","s":100758,"spy":101651,"qqq":98282},{"d":"2026-07-17","s":100622,"spy":100897,"qqq":97288},{"d":"2026-07-20","s":101169,"spy":100535,"qqq":96985},{"d":"2026-07-21","s":101802,"spy":101389,"qqq":98799},{"d":"2026-07-22","s":101881,"spy":101487,"qqq":98568},{"d":"2026-07-23","s":100332,"spy":100213,"qqq":96917},{"d":"2026-07-24","s":100796,"spy":100140,"qqq":95479},{"d":"2026-07-27","s":101234,"spy":100164,"qqq":95083},{"d":"2026-07-28","s":101470,"spy":100412,"qqq":94227},{"d":"2026-07-29","s":101303,"spy":98783,"qqq":92251},{"d":"2026-07-30","s":101692,"spy":100721,"qqq":95739},{"d":"2026-07-31","s":102532,"spy":101411,"qqq":96224},{"d":"2026-08-03","s":102521,"spy":102761,"qqq":97710},{"d":"2026-08-04","s":100969,"spy":104682,"qqq":100975},{"d":"2026-08-05","s":102331,"spy":104485,"qqq":100040},{"d":"2026-08-06","s":103701,"spy":104180,"qqq":99713},{"d":"2026-08-07","s":104794,"spy":104503,"qqq":100319},{"d":"2026-08-10","s":105642,"spy":104740,"qqq":100522},{"d":"2026-08-11","s":106367,"spy":104358,"qqq":100108},{"d":"2026-08-12","s":106653,"spy":104765,"qqq":100918},{"d":"2026-08-13","s":106810,"spy":105436,"qqq":102283},{"d":"2026-08-14","s":107771,"spy":105156,"qqq":101892},{"d":"2026-08-17","s":108405,"spy":104714,"qqq":101736},{"d":"2026-08-18","s":108975,"spy":104086,"qqq":100120},{"d":"2026-08-19","s":108174,"spy":104202,"qqq":99854},{"d":"2026-08-20","s":107148,"spy":103299,"qqq":99024},{"d":"2026-08-21","s":107802,"spy":103751,"qqq":99428},{"d":"2026-08-24","s":107401,"spy":103458,"qqq":98452},{"d":"2026-08-25","s":108334,"spy":103813,"qqq":99169},{"d":"2026-08-26","s":109019,"spy":103881,"qqq":99333},{"d":"2026-08-27","s":106504,"spy":104427,"qqq":100406},{"d":"2026-08-28","s":106819,"spy":104292,"qqq":99941},{"d":"2026-08-31","s":107628,"spy":104009,"qqq":99979},{"d":"2026-09-01","s":107490,"spy":103288,"qqq":98777},{"d":"2026-09-02","s":107933,"spy":103746,"qqq":98954},{"d":"2026-09-03","s":108015,"spy":104733,"qqq":100025},{"d":"2026-09-04","s":108144,"spy":104287,"qqq":100121},{"d":"2026-09-07","s":108117,"spy":104396,"qqq":100053},{"d":"2026-09-08","s":107955,"spy":103803,"qqq":100109},{"d":"2026-09-09","s":107394,"spy":103357,"qqq":99872},{"d":"2026-09-10","s":108127,"spy":102796,"qqq":98851},{"d":"2026-09-11","s":109243,"spy":103631,"qqq":99752},{"d":"2026-09-14","s":108592,"spy":103090,"qqq":98915},{"d":"2026-09-15","s":108092,"spy":102756,"qqq":98369},{"d":"2026-09-16","s":108635,"spy":102224,"qqq":98322},{"d":"2026-09-17","s":109503,"spy":103302,"qqq":99877},{"d":"2026-09-18","s":110652,"spy":103392,"qqq":100701}];
+  var TRADES = [{"ticker":"HOOD","opened":"2026-06-12","closed":"2026-06-26","expiry":"2026-07-24","ivr":51,"spotOpen":94.86,"callStrike":125,"putStrike":77,"credit":4.06,"contracts":1,"bpRegT":1355,"pnl":196,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":false,"closeCost":2.1,"spotNow":98.45},{"ticker":"AMD","opened":"2026-06-12","closed":"2026-06-29","expiry":"2026-07-24","ivr":98,"spotOpen":513.03,"callStrike":690,"putStrike":410,"credit":22.6,"contracts":1,"bpRegT":7390,"pnl":1207,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":false,"closeCost":10.53,"spotNow":539.15},{"ticker":"GOOGL","opened":"2026-06-12","closed":"2026-06-30","expiry":"2026-07-24","ivr":35,"spotOpen":362.52,"callStrike":410,"putStrike":325,"credit":7.9,"contracts":1,"bpRegT":4415,"pnl":441,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":true,"closeCost":3.49,"spotNow":355.99},{"ticker":"META","opened":"2026-07-02","closed":"2026-07-10","expiry":"2026-08-21","ivr":90.6,"spotOpen":585.1,"callStrike":705.0,"putStrike":505.0,"credit":15.4,"contracts":1,"bpRegT":7391,"pnl":-2308,"reason":"2x credit (SL)","sizeMode":"full","earningsInCycle":true,"closeCost":38.48,"spotNow":666.74},{"ticker":"CVX","opened":"2026-07-02","closed":"2026-07-13","expiry":"2026-08-21","ivr":61.1,"spotOpen":168.12,"callStrike":185.0,"putStrike":150.0,"credit":2.82,"contracts":1,"bpRegT":1963,"pnl":-331,"reason":"2x credit (SL)","sizeMode":"full","earningsInCycle":true,"closeCost":6.13,"spotNow":182.045},{"ticker":"JNJ","opened":"2026-07-03","closed":"2026-07-22","expiry":"2026-08-21","ivr":91.3,"spotOpen":262.99,"callStrike":290.0,"putStrike":240.0,"credit":5.0,"contracts":1,"bpRegT":3461,"pnl":242,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":2.58,"spotNow":255.09},{"ticker":"TSLA","opened":"2026-07-15","closed":"2026-07-23","expiry":"2026-08-28","ivr":40.2,"spotOpen":394.52,"callStrike":480.0,"putStrike":340.0,"credit":11.4,"contracts":1,"bpRegT":5085,"pnl":-1318,"reason":"2x credit (SL)","sizeMode":"half","earningsInCycle":null,"closeCost":24.58,"spotNow":330.575},{"ticker":"OXY","opened":"2026-07-07","closed":"2026-07-23","expiry":"2026-08-21","ivr":63.4,"spotOpen":51.68,"callStrike":60.0,"putStrike":45.0,"credit":1.02,"contracts":1,"bpRegT":619,"pnl":-129,"reason":"2x credit (SL)","sizeMode":"full","earningsInCycle":null,"closeCost":2.31,"spotNow":58.405},{"ticker":"COIN","opened":"2026-07-03","closed":"2026-07-23","expiry":"2026-08-21","ivr":63.0,"spotOpen":165.7,"callStrike":230.0,"putStrike":130.0,"credit":8.82,"contracts":1,"bpRegT":2540,"pnl":432,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":4.5,"spotNow":162.85},{"ticker":"AMD","opened":"2026-07-02","closed":"2026-07-24","expiry":"2026-08-21","ivr":100.0,"spotOpen":518.37,"callStrike":730.0,"putStrike":400.0,"credit":25.65,"contracts":1,"bpRegT":7749,"pnl":1285,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":12.8,"spotNow":519.32},{"ticker":"KO","opened":"2026-07-06","closed":"2026-07-27","expiry":"2026-08-21","ivr":79.3,"spotOpen":82.99,"callStrike":90.0,"putStrike":77.5,"credit":1.2,"contracts":1,"bpRegT":1231,"pnl":54,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":0.66,"spotNow":83.225},{"ticker":"MSFT","opened":"2026-07-02","closed":"2026-07-27","expiry":"2026-08-21","ivr":97.8,"spotOpen":388.24,"callStrike":460.0,"putStrike":340.0,"credit":10.47,"contracts":1,"bpRegT":4930,"pnl":522,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":5.25,"spotNow":391.155},{"ticker":"BA","opened":"2026-07-03","closed":"2026-07-28","expiry":"2026-08-21","ivr":61.6,"spotOpen":226.01,"callStrike":260.0,"putStrike":200.0,"credit":5.29,"contracts":1,"bpRegT":2790,"pnl":299,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":2.3,"spotNow":218.99},{"ticker":"GOOGL","opened":"2026-07-02","closed":"2026-07-28","expiry":"2026-08-21","ivr":70.1,"spotOpen":355.7,"callStrike":415.0,"putStrike":315.0,"credit":8.57,"contracts":1,"bpRegT":4414,"pnl":420,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":4.37,"spotNow":332.491},{"ticker":"SOFI","opened":"2026-07-06","closed":"2026-07-30","expiry":"2026-08-21","ivr":53.9,"spotOpen":18.61,"callStrike":25.0,"putStrike":15.0,"credit":0.73,"contracts":1,"bpRegT":259,"pnl":27,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":0.46,"spotNow":16.245},{"ticker":"MCD","opened":"2026-07-02","closed":"2026-07-31","expiry":"2026-08-21","ivr":80.6,"spotOpen":277.79,"callStrike":305.0,"putStrike":255.0,"credit":4.2,"contracts":1,"bpRegT":3697,"pnl":166,"reason":"21 DTE exit","sizeMode":"full","earningsInCycle":true,"closeCost":2.54,"spotNow":268.0},{"ticker":"AAPL","opened":"2026-07-02","closed":"2026-07-31","expiry":"2026-08-21","ivr":71.8,"spotOpen":308.06,"callStrike":345.0,"putStrike":280.0,"credit":5.44,"contracts":1,"bpRegT":3899,"pnl":353,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":true,"closeCost":1.91,"spotNow":304.845},{"ticker":"AMZN","opened":"2026-07-02","closed":"2026-07-31","expiry":"2026-08-21","ivr":63.6,"spotOpen":243.5,"callStrike":285.0,"putStrike":210.0,"credit":6.14,"contracts":1,"bpRegT":3049,"pnl":269,"reason":"21 DTE exit","sizeMode":"full","earningsInCycle":true,"closeCost":3.45,"spotNow":267.45},{"ticker":"PLTR","opened":"2026-07-06","closed":"2026-07-31","expiry":"2026-08-21","ivr":62.1,"spotOpen":132.61,"callStrike":170.0,"putStrike":110.0,"credit":5.25,"contracts":1,"bpRegT":1851,"pnl":141,"reason":"21 DTE exit","sizeMode":"full","earningsInCycle":null,"closeCost":3.84,"spotNow":122.805},{"ticker":"NVDA","opened":"2026-07-13","closed":"2026-08-03","expiry":"2026-08-28","ivr":35.5,"spotOpen":203.44,"callStrike":240.0,"putStrike":175.0,"credit":5.62,"contracts":1,"bpRegT":2596,"pnl":282,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":2.8,"spotNow":201.5},{"ticker":"KO","opened":"2026-08-03","closed":"2026-08-03","expiry":"2026-09-18","ivr":70.4,"spotOpen":87.01,"callStrike":95.0,"putStrike":80.0,"credit":0.94,"contracts":8,"bpRegT":9064,"pnl":-96,"reason":"ANULIUOTA: entry klaida (credit/BP 8.3%<12%), same-day unwind","sizeMode":"full","earningsInCycle":null,"closeCost":1.06,"spotNow":87.08},{"ticker":"PLTR","opened":"2026-07-31","closed":"2026-08-04","expiry":"2026-09-18","ivr":79.4,"spotOpen":120.77,"callStrike":155.0,"putStrike":100.0,"credit":5.04,"contracts":1,"bpRegT":1712,"pnl":-797,"reason":"2x credit (SL)","sizeMode":"full","earningsInCycle":null,"closeCost":13.01,"spotNow":156.3401},{"ticker":"AMD","opened":"2026-07-30","closed":"2026-08-07","expiry":"2026-09-18","ivr":79.6,"spotOpen":489.2,"callStrike":670.0,"putStrike":380.0,"credit":22.0,"contracts":1,"bpRegT":7092,"pnl":1092,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":11.08,"spotNow":485.71},{"ticker":"MCD","opened":"2026-07-31","closed":"2026-08-10","expiry":"2026-09-18","ivr":86.9,"spotOpen":269.22,"callStrike":295.0,"putStrike":245.0,"credit":4.32,"contracts":1,"bpRegT":3394,"pnl":219,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":2.13,"spotNow":273.0},{"ticker":"CAT","opened":"2026-07-30","closed":"2026-08-10","expiry":"2026-09-18","ivr":91.4,"spotOpen":810.07,"callStrike":980.0,"putStrike":680.0,"credit":24.4,"contracts":1,"bpRegT":10541,"pnl":1286,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":11.54,"spotNow":840.81},{"ticker":"AAPL","opened":"2026-08-03","closed":"2026-08-11","expiry":"2026-09-18","ivr":62.9,"spotOpen":302.69,"callStrike":335.0,"putStrike":275.0,"credit":5.16,"contracts":2,"bpRegT":7602,"pnl":496,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":2.68,"spotNow":306.1544},{"ticker":"XOM","opened":"2026-07-30","closed":"2026-08-12","expiry":"2026-09-18","ivr":79.4,"spotOpen":157.01,"callStrike":175.0,"putStrike":140.0,"credit":3.31,"contracts":1,"bpRegT":1901,"pnl":156,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":1.75,"spotNow":158.41},{"ticker":"CVX","opened":"2026-08-03","closed":"2026-08-12","expiry":"2026-09-18","ivr":67.4,"spotOpen":194.99,"callStrike":220.0,"putStrike":175.0,"credit":2.68,"contracts":4,"bpRegT":8872,"pnl":496,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":1.44,"spotNow":196.74},{"ticker":"OXY","opened":"2026-08-03","closed":"2026-08-13","expiry":"2026-09-18","ivr":69.3,"spotOpen":55.72,"callStrike":65.0,"putStrike":50.0,"credit":1.42,"contracts":10,"bpRegT":6990,"pnl":660,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":0.76,"spotNow":58.2},{"ticker":"COIN","opened":"2026-08-05","closed":"2026-08-14","expiry":"2026-09-18","ivr":48.1,"spotOpen":150.15,"callStrike":200.0,"putStrike":120.0,"credit":5.94,"contracts":1,"bpRegT":2095,"pnl":288,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":3.06,"spotNow":149.85},{"ticker":"WMT","opened":"2026-07-31","closed":"2026-08-19","expiry":"2026-09-18","ivr":72.6,"spotOpen":111.26,"callStrike":125.0,"putStrike":100.0,"credit":2.13,"contracts":1,"bpRegT":1326,"pnl":98,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":1.15,"spotNow":115.23},{"ticker":"WMT","opened":"2026-08-19","closed":"2026-08-20","expiry":"2026-10-16","ivr":64.0,"spotOpen":114.47,"callStrike":130.0,"putStrike":105.0,"credit":2.25,"contracts":1,"bpRegT":1567,"pnl":-239,"reason":"2x credit (SL)","sizeMode":"full","earningsInCycle":null,"closeCost":4.64,"spotNow":103.635},{"ticker":"CAT","opened":"2026-08-10","closed":"2026-08-21","expiry":"2026-09-18","ivr":55.0,"spotOpen":840.81,"callStrike":980.0,"putStrike":740.0,"credit":17.93,"contracts":1,"bpRegT":10201,"pnl":903,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":8.9,"spotNow":828.18},{"ticker":"AMD","opened":"2026-08-12","closed":"2026-08-25","expiry":"2026-09-18","ivr":33.5,"spotOpen":487.61,"callStrike":600.0,"putStrike":420.0,"credit":15.9,"contracts":1,"bpRegT":6466,"pnl":822,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":7.68,"spotNow":479.92},{"ticker":"DELL","opened":"2026-08-12","closed":"2026-08-26","expiry":"2026-09-18","ivr":76.4,"spotOpen":468.35,"callStrike":640.0,"putStrike":370.0,"credit":19.6,"contracts":1,"bpRegT":6644,"pnl":1026,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":9.34,"spotNow":459.9175},{"ticker":"NVDA","opened":"2026-08-10","closed":"2026-08-27","expiry":"2026-09-18","ivr":39.7,"spotOpen":217.02,"callStrike":250.0,"putStrike":190.0,"credit":4.68,"contracts":2,"bpRegT":5276,"pnl":626,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":1.55,"spotNow":223.135},{"ticker":"CRWD","opened":"2026-08-12","closed":"2026-08-27","expiry":"2026-09-18","ivr":70.4,"spotOpen":219.1,"callStrike":275.0,"putStrike":185.0,"credit":7.15,"contracts":2,"bpRegT":5812,"pnl":1022,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":2.04,"spotNow":218.825},{"ticker":"CRM","opened":"2026-08-14","closed":"2026-08-27","expiry":"2026-09-18","ivr":64.8,"spotOpen":196.5,"callStrike":230.0,"putStrike":170.0,"credit":4.82,"contracts":3,"bpRegT":7344,"pnl":-4050,"reason":"2x credit (SL)","sizeMode":"full","earningsInCycle":null,"closeCost":18.32,"spotNow":242.85},{"ticker":"SMCI","opened":"2026-08-14","closed":"2026-08-27","expiry":"2026-09-18","ivr":44.1,"spotOpen":39.94,"callStrike":55.0,"putStrike":33.0,"credit":1.64,"contracts":1,"bpRegT":563,"pnl":77,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":0.87,"spotNow":39.15},{"ticker":"MRVL","opened":"2026-08-27","closed":"2026-08-27","expiry":"2026-10-16","ivr":52.4,"spotOpen":246.92,"callStrike":350.0,"putStrike":195.0,"credit":12.1,"contracts":1,"bpRegT":3679,"pnl":-55,"reason":"ANULIUOTA: earnings blackout pazeidimas (MRVL AMC 2026-08-27; Zacks date n/a -> fail-open), same-day unwind","sizeMode":"full","earningsInCycle":null,"closeCost":12.65,"spotNow":246.92},{"ticker":"BA","opened":"2026-08-10","closed":"2026-08-28","expiry":"2026-09-18","ivr":35.3,"spotOpen":232.3,"callStrike":260.0,"putStrike":210.0,"credit":4.3,"contracts":2,"bpRegT":5692,"pnl":-274,"reason":"21 DTE exit","sizeMode":"half","earningsInCycle":null,"closeCost":5.67,"spotNow":209.5},{"ticker":"SNOW","opened":"2026-08-14","closed":"2026-08-28","expiry":"2026-09-18","ivr":72.1,"spotOpen":329.87,"callStrike":420.0,"putStrike":270.0,"credit":11.15,"contracts":1,"bpRegT":4414,"pnl":348,"reason":"21 DTE exit","sizeMode":"full","earningsInCycle":null,"closeCost":7.67,"spotNow":333.4},{"ticker":"ORCL","opened":"2026-08-21","closed":"2026-09-11","expiry":"2026-10-16","ivr":64.8,"spotOpen":146.51,"callStrike":200.0,"putStrike":120.0,"credit":6.67,"contracts":2,"bpRegT":4264,"pnl":964,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":true,"closeCost":1.85,"spotNow":156.12},{"ticker":"CRM","opened":"2026-08-27","closed":"2026-09-11","expiry":"2026-10-16","ivr":49.6,"spotOpen":242.85,"callStrike":290.0,"putStrike":210.0,"credit":5.96,"contracts":1,"bpRegT":3024,"pnl":291,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":3.05,"spotNow":248.02},{"ticker":"COIN","opened":"2026-08-25","closed":"2026-09-14","expiry":"2026-10-16","ivr":39.3,"spotOpen":186.77,"callStrike":260.0,"putStrike":150.0,"credit":7.83,"contracts":1,"bpRegT":2650,"pnl":382,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":4.01,"spotNow":185.54},{"ticker":"OXY","opened":"2026-08-20","closed":"2026-09-14","expiry":"2026-10-16","ivr":32.1,"spotOpen":61.93,"callStrike":70.0,"putStrike":55.0,"credit":1.55,"contracts":1,"bpRegT":774,"pnl":67,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":0.88,"spotNow":61.59},{"ticker":"META","opened":"2026-08-27","closed":"2026-09-15","expiry":"2026-10-16","ivr":36.6,"spotOpen":581.25,"callStrike":680.0,"putStrike":515.0,"credit":13.25,"contracts":1,"bpRegT":7138,"pnl":-1342,"reason":"2x credit (SL)","sizeMode":"half","earningsInCycle":null,"closeCost":26.67,"spotNow":670.045},{"ticker":"XOM","opened":"2026-08-21","closed":"2026-09-16","expiry":"2026-10-16","ivr":53.0,"spotOpen":165.4,"callStrike":185.0,"putStrike":150.0,"credit":3.56,"contracts":3,"bpRegT":6372,"pnl":504,"reason":"50% profit (TP)","sizeMode":"full","earningsInCycle":null,"closeCost":1.88,"spotNow":164.49},{"ticker":"SMCI","opened":"2026-08-27","closed":"2026-09-16","expiry":"2026-10-16","ivr":35.2,"spotOpen":38.59,"callStrike":55.0,"putStrike":31.0,"credit":1.78,"contracts":4,"bpRegT":2256,"pnl":316,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":0.99,"spotNow":36.705},{"ticker":"CAT","opened":"2026-08-31","closed":"2026-09-16","expiry":"2026-10-16","ivr":37.3,"spotOpen":792.18,"callStrike":910.0,"putStrike":700.0,"credit":16.95,"contracts":1,"bpRegT":9617,"pnl":840,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":null,"closeCost":8.55,"spotNow":791.15},{"ticker":"JNJ","opened":"2026-08-25","closed":"2026-09-17","expiry":"2026-10-16","ivr":48.7,"spotOpen":272.86,"callStrike":300.0,"putStrike":250.0,"credit":4.79,"contracts":1,"bpRegT":3651,"pnl":238,"reason":"50% profit (TP)","sizeMode":"half","earningsInCycle":true,"closeCost":2.41,"spotNow":269.58}];
+
+  function money(v, dec) {
+    dec = dec == null ? 0 : dec;
+    var s = Math.abs(v).toFixed(dec).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return (v < 0 ? '-' : '') + s + '$';
+  }
+  function pct(v) { return (Math.round(v * 10) / 10).toFixed(1).replace('.', ',') + '%'; }
+  function n(id, d) { var v = parseFloat(document.getElementById(id).value); return isFinite(v) && v >= 0 ? v : d; }
+
+  // ---- payoff diagram ----
+  function payoff() {
+    var spot = 313, pk = 285, ck = 345, cr = 4.84;
+    var W = 760, H = 300, pL = 54, pR = 20, pT = 24, pB = 40;
+    var x0 = 240, x1 = 390, yMin = -30, yMax = 10;
+    var pw = W - pL - pR, ph = H - pT - pB;
+    var X = function (p) { return pL + pw * (p - x0) / (x1 - x0); };
+    var Y = function (v) { return pT + ph * (1 - (v - yMin) / (yMax - yMin)); };
+    var pl = function (p) { return cr - Math.max(0, pk - p) - Math.max(0, p - ck); };
+    var pts = [];
+    for (var p = x0; p <= x1; p += 2.5) pts.push(X(p).toFixed(1) + ',' + Y(pl(p)).toFixed(1));
+    var beL = pk - cr, beR = ck + cr;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Short strangle pelno ir nuostolio diagrama">';
+    s += '<rect x="' + X(beL) + '" y="' + pT + '" width="' + (X(beR) - X(beL)) + '" height="' + ph + '" fill="var(--green-soft)"/>';
+    [10, 0, -10, -20, -30].forEach(function (v) {
+      s += '<line x1="' + pL + '" y1="' + Y(v) + '" x2="' + (W - pR) + '" y2="' + Y(v) + '" stroke="var(--grid)" stroke-width="1"/>';
+      s += '<text x="' + (pL - 8) + '" y="' + (Y(v) + 4) + '" fill="var(--muted)" font-size="11" text-anchor="end">' + (v > 0 ? '+' : '') + v + '$</text>';
+    });
+    s += '<line x1="' + pL + '" y1="' + Y(0) + '" x2="' + (W - pR) + '" y2="' + Y(0) + '" stroke="var(--muted)" stroke-width="1.2"/>';
+    [250, 275, 300, 325, 350, 375].forEach(function (p) {
+      s += '<text x="' + X(p) + '" y="' + (H - 14) + '" fill="var(--muted)" font-size="11" text-anchor="middle">' + p + '$</text>';
+    });
+    s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--c-strat)" stroke-width="2.5" stroke-linejoin="round"/>';
+    [[pk, 'put 285'], [ck, 'call 345']].forEach(function (k) {
+      s += '<line x1="' + X(k[0]) + '" y1="' + pT + '" x2="' + X(k[0]) + '" y2="' + (pT + ph) + '" stroke="var(--rust)" stroke-width="1" stroke-dasharray="4 4"/>';
+      s += '<text x="' + X(k[0]) + '" y="' + (pT + 12) + '" fill="var(--rust)" font-size="11" font-weight="700" text-anchor="middle">' + k[1] + '</text>';
+    });
+    s += '<line x1="' + X(spot) + '" y1="' + pT + '" x2="' + X(spot) + '" y2="' + (pT + ph) + '" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 4"/>';
+    s += '<text x="' + X(spot) + '" y="' + (pT + 12) + '" fill="var(--ink)" font-size="11" font-weight="700" text-anchor="middle">kaina 313</text>';
+    s += '<text x="' + X(spot) + '" y="' + (Y(cr) + 18) + '" fill="var(--green)" font-size="12" font-weight="800" text-anchor="middle">max pelnas +4,84$ (484$)</text>';
+    s += '<text x="' + (X(beL) - 6) + '" y="' + (Y(0) + 16) + '" fill="var(--muted)" font-size="10.5" font-weight="700" text-anchor="end">BE 280,16</text>';
+    s += '<text x="' + (X(beR) + 6) + '" y="' + (Y(0) + 16) + '" fill="var(--muted)" font-size="10.5" font-weight="700" text-anchor="start">BE 349,84</text>';
+    s += '</svg>';
+    document.getElementById('payoffCard').innerHTML = s;
+  }
+  payoff();
+
+  // ---- equity chart ----
+  function eqChart() {
+    var host = document.getElementById('eqChart'), tip = document.getElementById('eqTip');
+    var W = 820, H = 360, pL = 56, pR = 118, pT = 16, pB = 34;
+    var pw = W - pL - pR, ph = H - pT - pB, N = EQ.length;
+    var keys = [{ k: 's', c: 'var(--c-strat)', w: 2.6, l: 'Strangle' }, { k: 'spy', c: 'var(--c-spy)', w: 2, l: 'SPY' }, { k: 'qqq', c: 'var(--c-qqq)', w: 2, l: 'QQQ' }];
+    var vmin = Infinity, vmax = -Infinity;
+    EQ.forEach(function (p) { keys.forEach(function (s) { vmin = Math.min(vmin, p[s.k]); vmax = Math.max(vmax, p[s.k]); }); });
+    vmin = Math.floor(vmin / 2000) * 2000; vmax = Math.ceil(vmax / 2000) * 2000;
+    var X = function (i) { return pL + pw * i / (N - 1); };
+    var Y = function (v) { return pT + ph * (1 - (v - vmin) / (vmax - vmin)); };
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Sąskaitos vertė: strangle strategija prieš SPY ir QQQ" style="width:100%;height:auto;display:block">';
+    for (var v = vmin; v <= vmax; v += 2000) {
+      s += '<line x1="' + pL + '" y1="' + Y(v) + '" x2="' + (W - pR) + '" y2="' + Y(v) + '" stroke="var(--grid)" stroke-width="1"/>';
+      s += '<text x="' + (pL - 8) + '" y="' + (Y(v) + 4) + '" fill="var(--muted)" font-size="11" text-anchor="end">' + (v / 1000) + 'k$</text>';
+    }
+    s += '<line x1="' + pL + '" y1="' + Y(100000) + '" x2="' + (W - pR) + '" y2="' + Y(100000) + '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 4"/>';
+    var lastM = '';
+    EQ.forEach(function (p, i) {
+      var m = p.d.slice(0, 7);
+      if (m !== lastM && i > 0 && i < N - 2) {
+        lastM = m;
+        var names = { '07': 'liepa', '08': 'rugpjūtis', '09': 'rugsėjis' };
+        s += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="middle">' + (names[m.slice(5)] || m) + '</text>';
+      } else if (i === 0) { lastM = m; s += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="start">06-12</text>'; }
+    });
+    s += '<text x="' + X(N - 1) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="middle">09-18</text>';
+    keys.forEach(function (k) {
+      var pts = EQ.map(function (p, i) { return X(i).toFixed(1) + ',' + Y(p[k.k]).toFixed(1); }).join(' ');
+      s += '<polyline points="' + pts + '" fill="none" stroke="' + k.c + '" stroke-width="' + k.w + '" stroke-linejoin="round" stroke-linecap="round"/>';
+      var last = EQ[N - 1];
+      s += '<circle cx="' + X(N - 1) + '" cy="' + Y(last[k.k]) + '" r="4" fill="' + k.c + '" stroke="var(--card)" stroke-width="2"/>';
+    });
+    // end labels, de-overlapped
+    var last = EQ[N - 1];
+    var labs = keys.map(function (k) { var ch = (last[k.k] / 100000 - 1) * 100; return { y: Y(last[k.k]), t: k.l + ' ' + (ch >= 0 ? '+' : '') + ch.toFixed(1).replace('.', ',') + '%', c: k.c }; }).sort(function (a, b) { return a.y - b.y; });
+    for (var i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 14) labs[i].y = labs[i - 1].y + 14;
+    labs.forEach(function (l) { s += '<text x="' + (W - pR + 8) + '" y="' + (l.y + 4) + '" fill="' + l.c + '" font-size="11.5" font-weight="800">' + l.t + '</text>'; });
+    s += '<line id="eqCross" x1="0" y1="' + pT + '" x2="0" y2="' + (pT + ph) + '" stroke="var(--muted)" stroke-width="1" opacity="0"/>';
+    s += '<rect x="' + pL + '" y="' + pT + '" width="' + pw + '" height="' + ph + '" fill="transparent" id="eqHit"/>';
+    s += '</svg>';
+    host.innerHTML = s;
+    var svg = host.querySelector('svg'), cross = host.querySelector('#eqCross'), hit = host.querySelector('#eqHit');
+    function move(ev) {
+      var r = svg.getBoundingClientRect();
+      var cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      var fx = (cx - r.left) / r.width * W;
+      var i = Math.round((fx - pL) / pw * (N - 1)); i = Math.max(0, Math.min(N - 1, i));
+      var p = EQ[i];
+      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('opacity', '1');
+      tip.innerHTML = '<b>' + p.d + '</b>Strangle ' + money(p.s) + '<br>SPY ' + money(p.spy) + '<br>QQQ ' + money(p.qqq);
+      var hr = host.getBoundingClientRect();
+      tip.style.left = (r.left - hr.left + X(i) / W * r.width) + 'px';
+      tip.style.top = (r.top - hr.top + pT / H * r.height) + 'px';
+      tip.style.opacity = '1';
+    }
+    function leave() { tip.style.opacity = '0'; cross.setAttribute('opacity', '0'); }
+    hit.addEventListener('mousemove', move); hit.addEventListener('touchstart', move, { passive: true }); hit.addEventListener('touchmove', move, { passive: true });
+    hit.addEventListener('mouseleave', leave); hit.addEventListener('touchend', leave);
+  }
+  eqChart();
+
+  // ---- ledger ----
+  function ledger() {
+    var rows = TRADES.filter(function (t) { return t.reason.indexOf('ANULIUOTA') < 0; }).sort(function (a, b) { return a.closed < b.closed ? 1 : -1; });
+    var h = '<table class="tbl"><thead><tr><th>Akcija</th><th>Strike\'ai</th><th>Atidaryta</th><th>Uždaryta</th><th class="r">IVR</th><th class="r">Credit</th><th class="r">Kontr.</th><th>Priežastis</th><th class="r">P/L</th></tr></thead><tbody>';
+    rows.forEach(function (t) {
+      var rs = t.reason.indexOf('TP') >= 0 ? '50% pelnas' : (t.reason.indexOf('SL') >= 0 ? 'Stop 2x' : '21 DTE');
+      h += '<tr><td><b>' + t.ticker + '</b></td><td>' + t.putStrike + 'P / ' + t.callStrike + 'C</td><td>' + t.opened.slice(5) + '</td><td>' + t.closed.slice(5) + '</td><td class="r">' + Math.round(t.ivr) + '</td><td class="r">' + t.credit.toFixed(2).replace('.', ',') + '$</td><td class="r">' + t.contracts + '</td><td>' + rs + '</td><td class="r ' + (t.pnl >= 0 ? 'pos' : 'neg') + '">' + (t.pnl >= 0 ? '+' : '') + money(t.pnl) + '</td></tr>';
+    });
+    document.getElementById('ledgerWrap').innerHTML = h + '</tbody></table>';
+  }
+  ledger();
+
+  // ---- calculator ----
+  var ids = ['cSpot', 'cPutK', 'cPutP', 'cCallK', 'cCallP', 'cN', 'cAcct'];
+  function calc() {
+    var spot = n('cSpot', 0), pk = n('cPutK', 0), pp = n('cPutP', 0), ck = n('cCallK', 0), cp = n('cCallP', 0), N = Math.max(1, Math.round(n('cN', 1))), acct = n('cAcct', 0);
+    var cr = pp + cp, credit = cr * 100 * N;
+    var tp = cr * 0.5, sl = cr * 2, maxLoss = cr * 100 * N;
+    var reqP = (Math.max(0.2 * spot - Math.max(0, spot - pk), 0.1 * spot) * 100 + pp * 100);
+    var reqC = (Math.max(0.2 * spot - Math.max(0, ck - spot), 0.1 * spot) * 100 + cp * 100);
+    var bp1 = reqP >= reqC ? reqP + cp * 100 : reqC + pp * 100;
+    var bp = bp1 * N;
+    var eff = bp1 > 0 ? cr * 100 / bp1 * 100 : 0;
+    var beL = pk - cr, beR = ck + cr;
+    var sug = cr > 0 ? Math.max(1, Math.round(1500 / (cr * 100))) : 1;
+    var riskPct = acct > 0 ? maxLoss / acct * 100 : 0;
+    var out = document.getElementById('calcOut');
+    out.innerHTML =
+      '<div class="ogrid">' +
+      '<div class="obox"><span class="ol">Credit</span><span class="ov green">' + money(credit) + '</span><span class="oh">' + cr.toFixed(2).replace('.', ',') + '$ už akciją × 100 × ' + N + '</span></div>' +
+      '<div class="obox"><span class="ol">Fiksuoji pelną, kai mark</span><span class="ov">' + tp.toFixed(2).replace('.', ',') + '$</span><span class="oh">lieka ' + money(credit / 2) + '</span></div>' +
+      '<div class="obox"><span class="ol">Stop, kai mark</span><span class="ov rust">' + sl.toFixed(2).replace('.', ',') + '$</span><span class="oh">nuostolis ' + money(maxLoss) + ' = ' + pct(riskPct) + ' sąskaitos</span></div>' +
+      '<div class="obox"><span class="ol">Užrakina BP (Reg-T)</span><span class="ov">' + money(bp) + '</span><span class="oh">' + money(bp1) + ' už vieną strangle</span></div>' +
+      '<div class="obox"><span class="ol">Credit / BP</span><span class="ov ' + (eff >= 12 ? 'green' : 'rust') + '">' + pct(eff) + '</span><span class="oh">' + (eff >= 12 ? 'praeina 12% filtrą' : 'žemiau 12% - kapitalas dirba už nieką') + '</span></div>' +
+      '<div class="obox"><span class="ol">Pelno zona</span><span class="ov">' + beL.toFixed(2).replace('.', ',') + ' - ' + beR.toFixed(2).replace('.', ',') + '</span><span class="oh">' + (spot > 0 ? pct((beL / spot - 1) * 100) + ' / +' + pct((beR / spot - 1) * 100) : '') + ' nuo kainos</span></div>' +
+      '</div>' +
+      '<p class="oline"><b>Dydis pagal 1,5% taisyklę (100k sąskaitai):</b> ' + sug + ' kontrakt' + (sug === 1 ? 'as' : (sug < 10 ? 'ai' : 'ų')) + ' (1 500$ / ' + money(cr * 100) + ').' +
+      (riskPct > 2.5 ? ' <span class="rust">Tavo įvestas dydis rizikuoja ' + pct(riskPct) + ' sąskaitos prie stop\'o - per daug vienai pozicijai.</span>' : '') + '</p>';
+  }
+  ids.forEach(function (id) { document.getElementById(id).addEventListener('input', calc); });
+  calc();
+
+  // ---- checklist memory ----
+  try {
+    document.querySelectorAll('.chk input[data-k]').forEach(function (cb) {
+      var key = 'strangle-chk-' + cb.dataset.k;
+      try { if (localStorage.getItem(key) === '1') cb.checked = true; } catch (e) {}
+      cb.addEventListener('change', function () { try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch (e) {} });
+    });
+  } catch (e) {}
+
+  // ---- TOC scrollspy ----
+  var links = [].slice.call(document.querySelectorAll('nav.toc a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function spy() {
+    var best = 0, y = window.scrollY + 120;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) best = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === best); });
+    var on = links[best];
+    if (on && on.parentElement) {
+      var row = on.parentElement;
+      var left = on.offsetLeft - row.clientWidth / 2 + on.clientWidth / 2;
+      if (Math.abs(row.scrollLeft - left) > 60) row.scrollLeft = left;
+    }
+  }
+  var tick = false;
+  window.addEventListener('scroll', function () {
+    if (tick) return;
+    tick = true;
+    window.requestAnimationFrame(function () { spy(); tick = false; });
+  }, { passive: true });
+  spy();
+})();
+</script>
+
+</body>
+</html>
