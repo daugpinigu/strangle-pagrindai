@@ -751,25 +751,6 @@
   <div class="wrap">
     <div class="chapter"><span class="no">DUK</span><h2>Klausimai, kuriuos uždavėte</h2></div>
 
-    <h3>IBKR ir orderiai</h3>
-    <details class="faq"><summary>Sudėjau dvi sell kojas, o IBKR rodo „Order Buy". Ką padariau ne taip?</summary>
-      <div class="a"><p>Nieko. IBKR kombinaciją traktuoja kaip vieną instrumentą su savo kryptimi, o kojos viduje turi savo. Dvi parduotos kojos gali būti rodomos kaip Buy kombinacija su neigiama kaina - neigiama kaina čia ir reiškia, kad pinigus gauni tu. Tikrink Preview lange kojų sąrašą (abi Sell), kainos ženklą ir Maintenance Margin „Change" - jei margin auga, tu parduodi.</p></div></details>
-
-    <details class="faq"><summary>Įsimečiau strangle į watchlist'ą, spaudžiau Sell, o kojos tapo buy put ir buy call. Ką dabar turiu?</summary>
-      <div class="a"><p>Priklauso nuo to, kaip kombinacija buvo apibrėžta watchlist'e. Sell mygtukas apverčia visą apibrėžimą: jei ji buvo išsaugota kaip „buy put + buy call", tu ją pardavei ir turi short strangle, nors kojų sąraše rašo buy. Vienintelis patikimas atsakymas - Portfolio langas: prie kiekvienos kojos matai kiekį su minusu (parduota) arba be jo (pirkta), o Cost Basis rodo gautą (short) arba sumokėtą (long) premium. Jei paaiškėjo, kad nusipirkai - uždaryk ir surink iš naujo per Strategy Builder.</p></div></details>
-
-    <details class="faq"><summary>Ar galiu tiesiog parduoti put'ą ir call'ą atskirai?</summary>
-      <div class="a"><p>Taip, ir pradžiai tai geriausias variantas. Rezultatas sąskaitoje tas pats: du parduoti opcionai, margin skaičiuojamas kaip strangle. Kombinacija duoda vieną kainą ir vieną užpildymą, bet už tai moki painiava su Buy/Sell. Kai pirmi 10 strangle praeis be siurprizų, pereik prie Strategy Builder.</p></div></details>
-
-    <details class="faq"><summary>Ar strangle galima su cash sąskaita?</summary>
-      <div class="a"><p>Ne - nepadengtam call'ui reikia margin sąskaitos ir atitinkamo leidimo. Cash sąskaitoje artimiausias giminaitis yra covered strangle: turi 100 akcijų, parduodi CC virš kainos ir CSP žemiau, pinigus put'ui laikai cash. Dvi premijos, bet blogiausias atvejis - 200 akcijų, ne neribotas nuostolis.</p></div></details>
-
-    <details class="faq"><summary>Kiek BP užrakina vienas strangle?</summary>
-      <div class="a"><p>Reg-T logika: didesnės kojos reikalavimas plius kitos kojos premija, kur kojos reikalavimas yra maždaug 20% akcijos kainos minus atstumas iki strike'o. AAPL prie 313$ su 285/345 strike'ais tai apie 3 900$ už vieną strangle, t. y. apie 7 kartus mažiau nei CSP tam pačiam put'ui. Būtent todėl strangle taip efektyviai naudoja kapitalą ir būtent todėl juo taip lengva persidozuoti. Tikslų skaičių visada rodo Preview.</p></div></details>
-
-    <details class="faq"><summary>Kiek kainuoja komisiniai?</summary>
-      <div class="a"><p>IBKR ima už kontraktą, mano sandoriuose išeidavo apie 1,05$. Strangle - du kontraktai atidarant ir du uždarant, tai apie 4,2$ už pilną ciklą. Prie 484$ credit'o tai nereikšminga, prie 60$ credit'o - jau 7%. Dar viena priežastis nepardavinėti pigių strangle.</p></div></details>
-
     <h3>Taisyklės</h3>
     <details class="faq"><summary>Kodėl 16 delta, o ne 30? Juk 30 duoda dvigubai daugiau premium.</summary>
       <div class="a"><p>Ir dvigubai dažniau testuojama. 16 delta strangle turi apie 70% tikimybę, kad abi kojos expiruos beverčiai, 30 delta - apie 40%. Su 2x stop taisykle dažnas testavimas reiškia dažnus nuostolius po 1x credit, ir didesnis credit to nekompensuoja. 16 delta yra taškas, kur tikimybė, premium ir stop dažnis susitinka.</p></div></details>
