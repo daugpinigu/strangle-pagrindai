@@ -306,7 +306,7 @@
   .tipbox {
     position: absolute; pointer-events: none; background: var(--ink-strong); color: var(--bg);
     font-size: 12.5px; font-weight: 600; padding: 7px 10px; border-radius: 8px;
-    transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity .12s;
+    transform: translate(-50%, 0); white-space: nowrap; opacity: 0; transition: opacity .12s;
     font-variant-numeric: tabular-nums; z-index: 5; line-height: 1.4;
   }
   .tipbox b { display: block; font-weight: 800; margin-bottom: 2px; }
@@ -889,7 +889,7 @@
         s += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="middle">' + (names[m.slice(5)] || m) + '</text>';
       } else if (i === 0) { lastM = m; s += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="start">06-12</text>'; }
     });
-    s += '<text x="' + X(N - 1) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="middle">09-18</text>';
+    s += '<text x="' + X(N - 1) + '" y="' + (H - 12) + '" fill="var(--muted)" font-size="11" text-anchor="middle">' + EQ[N - 1].d.slice(5) + '</text>';
     keys.forEach(function (k) {
       var pts = EQ.map(function (p, i) { return X(i).toFixed(1) + ',' + Y(p[k.k]).toFixed(1); }).join(' ');
       s += '<polyline points="' + pts + '" fill="none" stroke="' + k.c + '" stroke-width="' + k.w + '" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -915,8 +915,9 @@
       cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('opacity', '1');
       tip.innerHTML = '<b>' + p.d + '</b>Strangle ' + money(p.s) + '<br>SPY ' + money(p.spy) + '<br>QQQ ' + money(p.qqq);
       var hr = host.getBoundingClientRect();
-      tip.style.left = (r.left - hr.left + X(i) / W * r.width) + 'px';
-      tip.style.top = (r.top - hr.top + pT / H * r.height) + 'px';
+      var lx = r.left - hr.left + X(i) / W * r.width;
+      tip.style.left = Math.max(80, Math.min(hr.width - 80, lx)) + 'px';
+      tip.style.top = (r.top - hr.top + pT / H * r.height + 6) + 'px';
       tip.style.opacity = '1';
     }
     function leave() { tip.style.opacity = '0'; cross.setAttribute('opacity', '0'); }
