@@ -914,7 +914,7 @@
       var p = EQ[i];
       cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('opacity', '1');
       tip.innerHTML = '<b>' + p.d + '</b>Strangle ' + money(p.s) + '<br>SPY ' + money(p.spy) + '<br>QQQ ' + money(p.qqq);
-      var hr = host.getBoundingClientRect();
+      var hr = (tip.offsetParent || host).getBoundingClientRect();
       var lx = r.left - hr.left + X(i) / W * r.width;
       tip.style.left = Math.max(80, Math.min(hr.width - 80, lx)) + 'px';
       tip.style.top = (r.top - hr.top + pT / H * r.height + 6) + 'px';
